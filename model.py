@@ -342,6 +342,8 @@ class ProtBertClassifier(pl.LightningModule):
 #         train_acc_mean = self.metric_acc.compute()
 
         self.log("train_loss_mean", train_loss_mean, prog_bar=True)
+        self.log("epoch", self.current_epoch)
+
 #         self.log("train_acc_mean", train_acc_mean, prog_bar=True)
 
 #         tqdm_dict = {"epoch_train_loss": train_loss_mean, "epoch_train_acc": train_acc_mean}
