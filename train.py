@@ -50,7 +50,7 @@ def get_args():
     #Misc.
     parser.add_argument('--seed', type=int, default=42, help='seeding number')
     parser.add_argument('--precision', type=int, default=32, choices=[16, 32], help='Floating point precision')
-    parser.add_argument('--monitor', type=str, default="val_acc_mean", help='metric to watch')
+    parser.add_argument('--monitor', type=str, default="val_loss_mean", help='metric to watch')
     parser.add_argument('--loss', '-l', type=str, default="classification", choices=['classification', 'contrastive', 'ner'], help='loss for training')
     parser.add_argument('--save_top_k', type=int, default="5", help='num of models to save')
     parser.add_argument('--patience', type=int, default=10, help='patience for stopping')
