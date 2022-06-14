@@ -81,7 +81,7 @@ class ProtBertClassifier(pl.LightningModule):
         if self.hparam.loss == "contrastive": 
             self.make_hook()
 
-        wandb.init(project="DL_Sequence_Collab", entity="hyunp2")
+        wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
         wandb.watch(self.head)
 
     def __build_model_ner(self) -> None:
