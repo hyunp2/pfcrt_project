@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import pdb
 from bertviz.bertviz import head_view
 from transformers import BertTokenizer, BertModel, AutoModel, AutoTokenizer, BertConfig, BertForSequenceClassification
+from pytorch_lightning.plugins import DDPPlugin
 import re, os, tqdm, requests
 from datasets import load_dataset
 import torch.nn as nn
@@ -127,6 +128,7 @@ def _main():
     # N INIT TRAINER
     # ------------------------
     #tb_logger = pl.loggers.TensorBoardLogger("tb_logs", name="my_model")
+    plugins = DDPPlugin(find_unused_parameters=False) if hparams.accelerator == "ddp" else None
 
     trainer = pl.Trainer(
     accelerator=hparams.accelerator,
@@ -139,6 +141,7 @@ def _main():
     deterministic=False,
     default_root_dir=hparams.load_model_directory,
     num_sanity_val_steps = hparams.sanity_checks,
+    plugins = plugins,
     resume_from_checkpoint=os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint) if hparams.load_model_checkpoint else None
     )
 
