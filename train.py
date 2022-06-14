@@ -38,7 +38,7 @@ def get_args():
 
     #Optimizer related
     parser.add_argument('--max-epochs', default=60, type=int, help='number of epochs max')
-    parser.add_argument('--min-epochs', default=1, type=int, help='number of epochs min')
+    parser.add_argument('--min-epochs', default=-1, type=int, help='number of epochs min')
     parser.add_argument('--batch-size', '-b', default=2048, type=int, help='batch size')
     parser.add_argument('--learning-rate', '-lr', default=1e-3, type=float, help='learning rate')
     parser.add_argument('--ngpus', type=int, default=1, help='Number of GPUs, -1 use all available. Use CUDA_VISIBLE_DEVICES=1, to decide gpus')
@@ -129,6 +129,7 @@ def _main():
     #tb_logger = pl.loggers.TensorBoardLogger("tb_logs", name="my_model")
 
     trainer = pl.Trainer(
+    acceelerator="ddp",
     gpus=hparams.ngpus,
     max_epochs=hparams.max_epochs,
     min_epochs=hparams.min_epochs,
