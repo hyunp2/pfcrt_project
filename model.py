@@ -339,12 +339,13 @@ class ProtBertClassifier(pl.LightningModule):
         """
         #outputs = self.loss_log_for_train
         train_loss_mean = torch.stack([x['train_acc'] for x in outputs]).mean()
-        train_acc_mean = self.metric_acc.compute()
+#         train_acc_mean = self.metric_acc.compute()
 
         self.log("train_loss_mean", train_loss_mean, prog_bar=True)
-        self.log("train_acc_mean", train_acc_mean, prog_bar=True)
+#         self.log("train_acc_mean", train_acc_mean, prog_bar=True)
 
-        tqdm_dict = {"epoch_train_loss": train_loss_mean, "epoch_train_acc": train_acc_mean}
+#         tqdm_dict = {"epoch_train_loss": train_loss_mean, "epoch_train_acc": train_acc_mean}
+        tqdm_dict = {"epoch_train_loss": train_loss_mean}
         wandb.log(tqdm_dict)
         self.metric_acc.reset()    
 
@@ -383,13 +384,15 @@ class ProtBertClassifier(pl.LightningModule):
         if not self.trainer.running_sanity_check:
             val_loss_mean = torch.stack([x['val_loss'] for x in outputs]).mean()
             # val_acc_mean = torch.stack([x['val_acc'] for x in outputs]).mean()
-            val_acc_mean = self.metric_acc.compute()
+#             val_acc_mean = self.metric_acc.compute()
  
             self.log("val_loss_mean", val_loss_mean, prog_bar=True)
-            self.log("val_acc_mean", torch.tensor(val_acc_mean).to(val_loss_mean), prog_bar=True) #tensor mount for Callback Early stop...https://pytorch-lightning.readthedocs.io/en/stable/_modules/pytorch_lightning/callbacks/early_stopping.html#:~:text=def%20_evaluate_stopping_criteria(self%2C%20current%3A%20torch.Tensor)%20%2D%3E%20Tuple%5Bbool%2C%20Optional%5Bstr%5D%5D%3A
+#             self.log("val_acc_mean", torch.tensor(val_acc_mean).to(val_loss_mean), prog_bar=True) #tensor mount for Callback Early stop...https://pytorch-lightning.readthedocs.io/en/stable/_modules/pytorch_lightning/callbacks/early_stopping.html#:~:text=def%20_evaluate_stopping_criteria(self%2C%20current%3A%20torch.Tensor)%20%2D%3E%20Tuple%5Bbool%2C%20Optional%5Bstr%5D%5D%3A
             self.log("epoch", self.current_epoch, prog_bar=True)
 
-            tqdm_dict = {"epoch_val_loss": val_loss_mean, "epoch_val_acc": val_acc_mean}
+#             tqdm_dict = {"epoch_val_loss": val_loss_mean, "epoch_val_acc": val_acc_mean}
+            tqdm_dict = {"epoch_val_loss": val_loss_mean}
+
             wandb.log(tqdm_dict)
             self.metric_acc.reset()   
 
@@ -425,8 +428,10 @@ class ProtBertClassifier(pl.LightningModule):
             - Dictionary with metrics to be added to the lightning logger.  
         """
         test_loss_mean = torch.stack([x['test_loss'] for x in outputs]).mean()
-        test_acc_mean = self.metric_acc.compute()
-        tqdm_dict = {"epoch_test_loss": test_loss_mean, "epoch_test_acc": test_acc_mean}
+#         test_acc_mean = self.metric_acc.compute()
+#         tqdm_dict = {"epoch_test_loss": test_loss_mean, "epoch_test_acc": test_acc_mean}
+        tqdm_dict = {"epoch_test_loss": test_loss_mean}
+
         wandb.log(tqdm_dict)
         self.metric_acc.reset()   
 
