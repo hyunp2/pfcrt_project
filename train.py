@@ -54,7 +54,7 @@ def get_args():
     parser.add_argument('--loss', '-l', type=str, default="classification", choices=['classification', 'contrastive', 'ner'], help='loss for training')
     parser.add_argument('--save_top_k', type=int, default="5", help='num of models to save')
     parser.add_argument('--patience', type=int, default=10, help='patience for stopping')
-    parser.add_argument('--metric_mode', type=str, default="max", help='mode of monitor')
+    parser.add_argument('--metric_mode', type=str, default="min", help='mode of monitor')
     parser.add_argument('--distributed-backend', default='ddp', help='Distributed backend: dp, ddp, ddp2')
     parser.add_argument('--num-workers', type=int, default=4, help='Number of workers for data prefetch')
     parser.add_argument('--amp-backend', type=str, default="native", help='Torch vs NVIDIA AMP')
@@ -94,7 +94,7 @@ def _main():
     #  -------------------------------
     # initialize Model Checkpoint Saver
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
-    filename="{epoch}-{train_acc_mean:.2f}-{val_acc_mean:.2f}",
+    filename="{epoch}-{train_loss_mean:.2f}-{val_loss_mean:.2f}",
     save_top_k=hparams.save_top_k,
     verbose=True,
     monitor=hparams.monitor,
