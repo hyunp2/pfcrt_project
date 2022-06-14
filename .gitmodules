@@ -1,0 +1,3 @@
+[submodule "bertviz"]
+	path = bertviz
+	url = git@github.com:jessevig/bertviz.git
