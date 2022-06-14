@@ -28,7 +28,7 @@ def get_args():
     parser = argparse.ArgumentParser(description='Training')
 
     #Model related
-    parser.add_argument('--load-model-directory', "-dirm", type=str, default="/Scr/hyunpark/DL_Sequence_Collab/output", help='This is where model is/will be located...')  
+    parser.add_argument('--load-model-directory', "-dirm", type=str, default="/Scr/hyunpark/DL_Sequence_Collab/pfcrt_projects/output", help='This is where model is/will be located...')  
     parser.add_argument('--load-model-checkpoint', "-ckpt", type=str, default=None, help='which checkpoint...')  
     parser.add_argument('--model-name', type=str, default='Rostlab/prot_bert', help='HUGGINGFACE Backbone model name card')
 
