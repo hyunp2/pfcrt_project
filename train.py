@@ -129,7 +129,7 @@ def _main():
     #tb_logger = pl.loggers.TensorBoardLogger("tb_logs", name="my_model")
 
     trainer = pl.Trainer(
-    accelerator="dp",
+    accelerator=hparams.accelerator,
     gpus=hparams.ngpus,
     max_epochs=hparams.max_epochs,
     min_epochs=hparams.min_epochs,
