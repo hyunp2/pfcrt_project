@@ -7,6 +7,7 @@ import pdb
 from bertviz.bertviz import head_view
 from transformers import BertTokenizer, BertModel, AutoModel, AutoTokenizer, BertConfig, BertForSequenceClassification
 from transformers.modeling_outputs import BaseModelOutputWithPoolingAndCrossAttentions
+from packaging import version
 import re, os, tqdm, requests
 from datasets import load_dataset
 import torch.nn as nn
