@@ -41,7 +41,7 @@ def get_args():
     parser.add_argument('--min-epochs', default=1, type=int, help='number of epochs min')
     parser.add_argument('--batch-size', '-b', default=2048, type=int, help='batch size')
     parser.add_argument('--learning-rate', '-lr', default=1e-3, type=float, help='learning rate')
-    parser.add_argument('--ngpus', type=int, default=-1, help='Number of GPUs, -1 use all available. Use CUDA_VISIBLE_DEVICES=1, to decide gpus')
+    parser.add_argument('--ngpus', type=int, default=1, help='Number of GPUs, -1 use all available. Use CUDA_VISIBLE_DEVICES=1, to decide gpus')
     parser.add_argument('--num-nodes', type=int, default=1, help='Number of nodes')
     parser.add_argument('--warm-up-split', type=int, default=5, help='warmup times')
     parser.add_argument('--scheduler', type=str, default="cosine", help='scheduler type')
