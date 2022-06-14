@@ -122,7 +122,7 @@ class ProtBertClassifier(pl.LightningModule):
 
     def __build_loss_ner(self):
         """ Initializes the loss function/s. """
-        self._loss = CRF(num_tags=, batch_first=True)
+        self._loss = CRF(num_tags=self.num_labels, batch_first=True)
 
     def compute_logits_CURL(self, z_a, z_pos):
         """
