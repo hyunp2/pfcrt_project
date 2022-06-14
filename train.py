@@ -63,6 +63,7 @@ def get_args():
     parser.add_argument('--sanity-checks', '-sc', type=int, default=2, help='Num sanity checks..')
     parser.add_argument('--z_dim', '-zd', type=int, default=1024, help='CURL purpose.., SAME as self.encoder_features')
     parser.add_argument('--ner', '-ner', type=bool, default=False, help='NER training')
+    parser.add_argument('--ner-config', '-nc', type=str, default=None, help='NER config')
 
     args = parser.parse_args()
     return args
