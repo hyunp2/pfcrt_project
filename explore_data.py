@@ -24,12 +24,14 @@ class DataParser(object):
             data = pd.read_csv(f"{filename}")        
         return data
     
-    @staticmethod
-    def select_columns(df: pd.DataFrame, col_names: List[str]=["PfCRT Isoform", "Amino Acid Sequence", 
+    def select_columns(self, col_names: List[str]=["PfCRT Isoform", "Amino Acid Sequence", 
                                                                "PPQ Resistance", "CQ Resistance", "Fitness"]):
-        return df.loc[:,col_names]
+        return self.data.loc[:,col_names]
     
-    
+if __name__ == "__main__":
+    parser = DataParser(filename="pfcrt.csv")
+    data = parser.data
+    data_trunc = select_columns()
 
     
     
