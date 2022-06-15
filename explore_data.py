@@ -56,7 +56,7 @@ if __name__ == "__main__":
     # ------------------------
     # 1 INIT LIGHTNING MODEL
     # ------------------------
-    model = Model.ProtBertClassifier.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_ckpt), hparam=hparam )
+    model = Model.ProtBertClassifier.load_from_checkpoint( os.path.join(hparam.load_model_directory, hparams.load_model_ckpt), hparam=hparam )
     
     
     
