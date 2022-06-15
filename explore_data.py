@@ -15,7 +15,7 @@ class DataParser(object):
         
     @staticmethod
     def read_file(filename: str):
-        data = pd.read_xlsx(f"{filename}")
+        data = pd.read_excel(f"{filename}")
         return data
     
     @staticmethod
