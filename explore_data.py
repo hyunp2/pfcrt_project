@@ -66,7 +66,7 @@ if __name__ == "__main__":
     test_dataloader = model.test_dataloader()
     trainer.predict(model, dataloaders=test_dataloader)
     
-#     python -m explore_data --ngpus 1 --accelerator ddp --load-model-checkpoint epoch=59-train_loss_mean=0.95-val_loss_mean=0.18.ckpt
+#     python -m explore_data --ngpus 1 --accelerator ddp --load-model-checkpoint epoch=59-train_loss_mean=0.95-val_loss_mean=0.18.ckpt -b 512
 
     
     
