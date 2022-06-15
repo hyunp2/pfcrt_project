@@ -8,7 +8,8 @@ import os, sys, shutil, subprocess, pathlib
 @attrs.define
 class DataParser(object):
     def __init__(self, filename:str = None):
-        self.data = self.read_file(filename)
+        data = self.read_file(filename)
+        self.data = data
         
     @classmethod
     def get_data(cls, filename):
