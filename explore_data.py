@@ -63,7 +63,8 @@ if __name__ == "__main__":
         gpus=hparams.ngpus,
         default_root_dir=hparams.load_model_directory,
         )
-    trainer.predict(model)
+    test_dataloader = model.test_dataloader()
+    trainer.predict(model, dataloaders=test_dataloader)
     
 #     python -m explore_data --ngpus 1 --accelerator ddp --load-model-checkpoint epoch=59-train_loss_mean=0.95-val_loss_mean=0.18.ckpt
 
