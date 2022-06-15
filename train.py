@@ -100,7 +100,7 @@ def _main():
     save_top_k=hparams.save_top_k,
     verbose=True,
     monitor=hparams.monitor,
-    period=1,
+    every_n_epochs=1,
     mode=hparams.metric_mode,
     dirpath=hparams.load_model_directory,
     )
