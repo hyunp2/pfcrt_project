@@ -480,7 +480,7 @@ class ProtBertClassifier(pl.LightningModule):
         if self.ner: logits_ = logits_[:,0,:] #to (B,zdim) from [CLS]
         
         self.plot_confusion(ground_truth, predictions, class_names)
-        self.plot_manifold(self.hparam, logits_) #WIP to have residue projection as well!
+        self.plot_manifold(self.hparam, logits_, ground_truth) #WIP to have residue projection as well!
         self.plot_ngl(self.hparam)
  
     @staticmethod
@@ -504,7 +504,7 @@ class ProtBertClassifier(pl.LightningModule):
 #         wandb.log({"Calibration": fig}) #Needs (B/BL,num_labels)
 
     @staticmethod
-    def plot_manifold(hparam: argparse.ArgumentParser, logits_: np.ndarray):
+    def plot_manifold(hparam: argparse.ArgumentParser, logits_: np.ndarray, ground_truth: np.ndarray):
         #WIP for PCA or UMAP or MDS
         #summary is 
         import sklearn.manifold
