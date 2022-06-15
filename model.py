@@ -484,15 +484,25 @@ class ProtBertClassifier(pl.LightningModule):
         self.plot_ngl(self.hparam)
  
     @staticmethod
-    def plot_confusion(ground_truth: torch.Tensor, predictions: torch.Tensor, class_names: np.ndarray=np.array([0,1])):
+    def plot_confusion(ground_truth: np.ndarray, predictions: np.ndarray, class_names: np.ndarray=np.array([0,1])):
+        from sklearn.metrics import RocCurveDisplay, PrecisionRecallDisplay, 
+        from sklearn.calibration import CalibrationDisplay
         cm = wandb.plot.confusion_matrix(
             y_true=ground_truth,
             preds=predictions,
             class_names=class_names) 
         wandb.log({"Confusion Matrix": cm}) #Needs (B, )
-        wandb.log({"ROC": wandb.plot.roc_curve(ground_truth, predictions)}) #Needs (B/BL,num_labels)
-        wandb.log({"PR": wandb.plot.pr_curve(ground_truth, predictions)}) #Needs (B/BL,num_labels)
-  
+        
+        disp = RocCurveDisplay.from_predictions(ground_truth, predictions)
+        fig = disp.figure_
+        wandb.log({"ROC": fig}) #Needs (B/BL,num_labels)
+        disp = PrecisionRecallDisplay.from_predictions(ground_truth, predictions)
+        fig = disp.figure_
+        wandb.log({"PR": fig}) #Needs (B/BL,num_labels)
+        disp = CalibrationDisplay.from_predictions(ground_truth, predictions)
+        fig = disp.figure_
+        wandb.log({"Calibration": fig}) #Needs (B/BL,num_labels)
+
     @staticmethod
     def plot_manifold(hparam: argparse.ArgumentParser, logits_: np.ndarray):
         #WIP for PCA or UMAP or MDS
