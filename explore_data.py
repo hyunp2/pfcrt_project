@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import attrs
 from typing import *
-import os, sys, shutils, subprocess, pathlib
+import os, sys, shutil, subprocess, pathlib
 
 @attrs.define
 class DataParser(object):
