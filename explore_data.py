@@ -26,10 +26,11 @@ class DataParser(object):
     
     def select_columns(self, col_names: List[str]=["PfCRT Isoform", "Amino Acid Sequence", 
                                                                "PPQ Resistance", "CQ Resistance", "Fitness"], drop_duplicate_on="Amino Acid Sequence"):
-        if drop_duplicate_on != None:
-            return self.data.loc[:,col_names].drop_duplicates(drop_duplicate_on)
-        else:
+        if drop_duplicate_on == None:
             return self.data.loc[:,col_names]
+        elif drop_duplicate_on != None:
+            return self.data.loc[:,col_names].drop_duplicates(drop_duplicate_on)
+
     
 if __name__ == "__main__":
     parser = DataParser(filename="pfcrt.csv")
