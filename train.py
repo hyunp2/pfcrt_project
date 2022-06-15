@@ -150,3 +150,4 @@ def _main():
 if __name__ == "__main__":
     _main()
     #CUDA_VISIBLE_DEVICES=0 python main.py -ls 0.1 -b 512 -ckpt epoch=4-val_loss=0.30-val_acc=0.94.ckpt
+    #python -m train -b 512 --accelerator ddp --ngpus -1
