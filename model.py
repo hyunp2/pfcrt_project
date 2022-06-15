@@ -473,7 +473,7 @@ class ProtBertClassifier(pl.LightningModule):
         ground_truth = torch.cat([x['ground_truth'] for x in outputs[0]], dim=0).contiguous().view(-1,).detach().cpu().numpy() #catted results (B,) or (BL, )
         b = ground_truth.shape[0]
         predictions = torch.cat([x['predictions'] for x in outputs[0]], dim=0).contiguous().view(b,-1).detach().cpu().numpy() #catted results ... weird outputs indexing (B, num_labels) or (BL, num_labels)
-        predictions_label = predictions.argmax(axis = -1) #(B,) or (BL,)
+        predictions = predictions.argmax(axis = -1) #(B,) or (BL,)
         class_names = np.arange(self.num_labels).tolist() #(num_labels)
         logits = torch.cat([x['last_layer'] for x in outputs[0]], dim=0).contiguous().view(b,-1).detach().cpu().numpy() #catted results (B,reduced_dim)
         logits_ = logits #(B,zdim) or (B,L,zdim)
