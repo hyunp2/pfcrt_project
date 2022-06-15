@@ -98,16 +98,17 @@ if __name__ == "__main__":
     dataset = load_dataset("yarongef/human_proteome_triplets", cache_dir=hparam.load_data_directory)
     tokenizer=BertTokenizer.from_pretrained("Rostlab/prot_bert",do_lower_case=False, return_tensors="pt",cache_dir=hparam.load_model_directory)
     
+    stage="train"
     x = []
-    for i in range(len(self.dataset[stage]["Seq"])):
-        x.append(' '.join(self.dataset[stage]["Seq"][i]))
+    for i in range(len(dataset[stage]["Seq"])):
+        x.append(' '.join(dataset[stage]["Seq"][i]))
     proper_inputs = x #Spaced btw letters
 
-    inputs = self.tokenizer.batch_encode_plus(proper_inputs,
+    inputs = tokenizer.batch_encode_plus(proper_inputs,
                                       add_special_tokens=True,
                                       padding=True,
                                       truncation=True, return_tensors="pt",
-                                      max_length=self.hparam.max_length) #Tokenize inputs as a dict type of Tensors
-    targets = self.dataset[stage]["label"] #list type
+                                      max_length=hparam.max_length) #Tokenize inputs as a dict type of Tensors
+    targets = dataset[stage]["label"] #list type
     targets = torch.Tensor(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
         
