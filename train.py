@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import pdb
 from bertviz.bertviz import head_view
 from transformers import BertTokenizer, BertModel, AutoModel, AutoTokenizer, BertConfig, BertForSequenceClassification
-from pytorch_lightning.plugins import DDPPlugin
+# from pytorch_lightning.plugins import DDPPlugin
 import re, os, tqdm, requests
 from datasets import load_dataset
 import torch.nn as nn
@@ -42,11 +42,12 @@ def get_args():
     parser.add_argument('--min-epochs', default=1, type=int, help='number of epochs min')
     parser.add_argument('--batch-size', '-b', default=2048, type=int, help='batch size')
     parser.add_argument('--learning-rate', '-lr', default=1e-3, type=float, help='learning rate')
-    parser.add_argument('--ngpus', type=int, default=-1, help='Number of GPUs, -1 use all available. Use CUDA_VISIBLE_DEVICES=1, to decide gpus')
+    parser.add_argument('--ngpus', default="auto", help='Number of GPUs, -1 use all available. Use CUDA_VISIBLE_DEVICES=1, to decide gpus')
     parser.add_argument('--num-nodes', type=int, default=1, help='Number of nodes')
     parser.add_argument('--warm-up-split', type=int, default=5, help='warmup times')
     parser.add_argument('--scheduler', type=str, default="cosine", help='scheduler type')
-    parser.add_argument('--accelerator', "-accl", type=str, default="gpu", help='accelerator type')
+    parser.add_argument('--accelerator', "-accl", type=str, default="gpu", help='accelerator type', choices=["cpu","gpu","tpu"])
+    parser.add_argument('--strategy', "-st", type=str, default="ddp", help='accelerator type', choices=["ddp","dp","ddp2",None])
 
     #Misc.
     parser.add_argument('--seed', type=int, default=42, help='seeding number')
@@ -131,8 +132,6 @@ def _main():
     plugins = DDPPlugin(find_unused_parameters=False) if hparams.accelerator == "ddp" else None
 
     trainer = pl.Trainer(
-    accelerator=hparams.accelerator,
-    gpus=hparams.ngpus,
     max_epochs=hparams.max_epochs,
     min_epochs=hparams.min_epochs,
     callbacks = [early_stop_callback, checkpoint_callback, swa_callback, progbar_callback, timer_callback],
@@ -141,7 +140,10 @@ def _main():
     deterministic=False,
     default_root_dir=hparams.load_model_directory,
     num_sanity_val_steps = hparams.sanity_checks,
-    plugins = plugins,
+    devices=hparams.ngpus,
+    strategy=hparams.strategy,
+    accelerator=hparams.accelerator,
+    auto_select_gpus=True,
     resume_from_checkpoint=os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint) if hparams.load_model_checkpoint else None
     )
 
