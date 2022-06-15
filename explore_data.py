@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import attrs
 from typing import *
+import os, sys, shutils, subprocess, pathlib
 
 @attrs.define
 class DataParser(object):
@@ -15,7 +16,11 @@ class DataParser(object):
         
     @staticmethod
     def read_file(filename: str):
-        data = pd.read_excel(f"{filename}")
+        ext = os.path.splitext(filename)[-1]
+        if ext in ["xlsx"]:
+            data = pd.read_excel(f"{filename}")
+        elif ext in ["csv"]:
+            data = pd.read_csv(f"{filename}")        
         return data
     
     @staticmethod
