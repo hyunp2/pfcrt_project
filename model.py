@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pdb
 from bertviz.bertviz import head_view
-from transformers import BertTokenizer, BertModel, AutoModel, AutoTokenizer, BertConfig, BertForSequenceClassification
+from transformers import BertTokenizer, BertModel, AutoModel, AutoTokenizer, BertConfig, BertForSequenceClassification, get_linear_schedule_with_warmup
 import re, os, tqdm, requests
 from datasets import load_dataset
 import torch.nn as nn
@@ -545,6 +545,15 @@ class ProtBertClassifier(pl.LightningModule):
             },
         ]
         optimizer = optim.AdamW(parameters, lr=self.hparam.learning_rate)
+        total_training_steps = len(self.train_dataloader()) * self.hparam.epoches
+        warmup_steps = total_training_steps // opt.warm_up_split
+        scheduler = get_linear_schedule_with_warmup(
+            optimizer,
+            num_warmup_steps=total_training_steps,
+            num_training_steps=total_training_steps,
+        )
+        scheduler = {"scheduler": scheduler, "interval": "step", "frequency": 1}
+
         return [optimizer], []
 
     def tokenizing(self, stage="train"):
