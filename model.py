@@ -487,7 +487,7 @@ class ProtBertClassifier(pl.LightningModule):
     def plot_confusion(ground_truth: torch.Tensor, predictions: torch.Tensor, class_names: np.ndarray=np.array([0,1])):
         cm = wandb.plot.confusion_matrix(
             y_true=ground_truth,
-            preds=predictions_label,
+            preds=predictions,
             class_names=class_names) 
         wandb.log({"Confusion Matrix": cm}) #Needs (B, )
         wandb.log({"ROC": wandb.plot.roc_curve(ground_truth, predictions)}) #Needs (B/BL,num_labels)
