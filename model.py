@@ -544,7 +544,7 @@ class ProtBertClassifier(pl.LightningModule):
                 "params": self.model.parameters(), 
             },
         ]
-        optimizer = optim.AdamW(parameters, lr=self.hparam.learning_rate)
+        optimizer = AdaFactor(parameters, lr=self.hparam.learning_rate)
         total_training_steps = len(self.train_dataloader()) * self.hparam.max_epochs
         warmup_steps = total_training_steps // self.hparam.warm_up_split
         scheduler = get_linear_schedule_with_warmup(
@@ -554,7 +554,7 @@ class ProtBertClassifier(pl.LightningModule):
         )
         scheduler = {"scheduler": scheduler, "interval": "step", "frequency": 1}
 
-        return [optimizer], []
+        return [optimizer], [scheduler]
 
     def tokenizing(self, stage="train"):
         x = []
