@@ -1,9 +1,12 @@
 import pandas as pd
 import numpy as np
 import torch
+import pytorch_lightning as pl
 import attrs, dataclasses
 from typing import *
 import os, sys, shutil, subprocess, pathlib
+from train import get_args
+import model as Model
 
 @dataclasses.dataclass
 class DataParser(object):
@@ -47,6 +50,13 @@ if __name__ == "__main__":
     # 50%          0.000000       0.000000   1.000000
     # 75%          0.250000       1.000000   1.000000
     # max          2.000000       2.000000   1.000000
+    
+    hparams = get_args()
+    pl.seed_everything(hparams.seed)
+    # ------------------------
+    # 1 INIT LIGHTNING MODEL
+    # ------------------------
+    model = Model.ProtBertClassifier(hparams)
     
     
     
