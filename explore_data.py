@@ -6,7 +6,7 @@ from typing import *
 
 @attrs.define
 class DataParser(object):
-    def __init__(self, filename:str = None)
+    def __init__(self, filename:str = None):
         self.data = self.read_file(filename)
         
     @classmethod
