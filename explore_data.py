@@ -17,9 +17,9 @@ class DataParser(object):
     @staticmethod
     def read_file(filename: str):
         ext = os.path.splitext(filename)[-1]
-        if ext in ["xlsx"]:
+        if ext in [".xlsx"]:
             data = pd.read_excel(f"{filename}")
-        elif ext in ["csv"]:
+        elif ext in [".csv"]:
             data = pd.read_csv(f"{filename}")        
         return data
     
