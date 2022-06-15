@@ -129,22 +129,22 @@ def _main():
     # N INIT TRAINER
     # ------------------------
     #tb_logger = pl.loggers.TensorBoardLogger("tb_logs", name="my_model")
-    plugins = DDPPlugin(find_unused_parameters=False) if hparams.accelerator == "ddp" else None
+#     plugins = DDPPlugin(find_unused_parameters=False) if hparams.accelerator == "ddp" else None
 
     trainer = pl.Trainer(
-    max_epochs=hparams.max_epochs,
-    min_epochs=hparams.min_epochs,
-    callbacks = [early_stop_callback, checkpoint_callback, swa_callback, progbar_callback, timer_callback],
-    precision=hparams.precision,
-    amp_backend=hparams.amp_backend,
-    deterministic=False,
-    default_root_dir=hparams.load_model_directory,
-    num_sanity_val_steps = hparams.sanity_checks,
-    devices=hparams.ngpus,
-    strategy=hparams.strategy,
-    accelerator=hparams.accelerator,
-    auto_select_gpus=True,
-    resume_from_checkpoint=os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint) if hparams.load_model_checkpoint else None
+        max_epochs=hparams.max_epochs,
+        min_epochs=hparams.min_epochs,
+        callbacks = [early_stop_callback, checkpoint_callback, swa_callback, progbar_callback, timer_callback],
+        precision=hparams.precision,
+        amp_backend=hparams.amp_backend,
+        deterministic=False,
+        default_root_dir=hparams.load_model_directory,
+        num_sanity_val_steps = hparams.sanity_checks,
+        devices=hparams.ngpus,
+        strategy=hparams.strategy,
+        accelerator=hparams.accelerator,
+        auto_select_gpus=True,
+        resume_from_checkpoint=os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint) if hparams.load_model_checkpoint else None
     )
 
     trainer.fit(model)
