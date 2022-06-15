@@ -51,12 +51,12 @@ if __name__ == "__main__":
     # 75%          0.250000       1.000000   1.000000
     # max          2.000000       2.000000   1.000000
     
-    hparams = get_args()
-    pl.seed_everything(hparams.seed)
+    hparam = get_args()
+    pl.seed_everything(hparam.seed)
     # ------------------------
     # 1 INIT LIGHTNING MODEL
     # ------------------------
-    model = Model.ProtBertClassifier(hparams)
+    model = Model.ProtBertClassifier.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_ckpt), hparam=hparam )
     
     
     
