@@ -47,7 +47,7 @@ def get_args():
     parser.add_argument('--warm-up-split', type=int, default=5, help='warmup times')
     parser.add_argument('--scheduler', type=str, default="cosine", help='scheduler type')
     parser.add_argument('--accelerator', "-accl", type=str, default="gpu", help='accelerator type', choices=["cpu","gpu","tpu"])
-    parser.add_argument('--strategy', "-st", type=str, default="ddp", help='accelerator type', choices=["ddp","dp","ddp2",None])
+    parser.add_argument('--strategy', "-st", type=str, default="ddp", help='accelerator type', choices=["ddp_spawn","ddp","dp","ddp2","horovod",None])
 
     #Misc.
     parser.add_argument('--seed', type=int, default=42, help='seeding number')
