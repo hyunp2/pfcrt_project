@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 import torch
-import attrs
+import attrs, dataclasses
 from typing import *
 import os, sys, shutil, subprocess, pathlib
 
+@dataclasses.dataclass
 class DataParser(object):
     def __init__(self, filename:str = None):
         data = self.read_file(filename)
