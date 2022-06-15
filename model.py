@@ -499,9 +499,9 @@ class ProtBertClassifier(pl.LightningModule):
         disp = PrecisionRecallDisplay.from_predictions(ground_truth, predictions)
         fig = disp.figure_
         wandb.log({"PR": fig}) #Needs (B/BL,num_labels)
-        disp = CalibrationDisplay.from_predictions(ground_truth, predictions)
-        fig = disp.figure_
-        wandb.log({"Calibration": fig}) #Needs (B/BL,num_labels)
+#         disp = CalibrationDisplay.from_predictions(ground_truth, predictions)
+#         fig = disp.figure_
+#         wandb.log({"Calibration": fig}) #Needs (B/BL,num_labels)
 
     @staticmethod
     def plot_manifold(hparam: argparse.ArgumentParser, logits_: np.ndarray):
