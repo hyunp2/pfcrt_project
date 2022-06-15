@@ -30,13 +30,23 @@ class DataParser(object):
             return self.data.loc[:,col_names]
         elif drop_duplicate_on != None:
             return self.data.loc[:,col_names].drop_duplicates(drop_duplicate_on)
-
+        
     
 if __name__ == "__main__":
     parser = DataParser(filename="pfcrt.csv")
     data = parser.data
     data_trunc = parser.select_columns()
-
+    
+    # data_trunc.describe()
+    #        PPQ Resistance  CQ Resistance    Fitness
+    # count       48.000000      58.000000  44.000000
+    # mean         0.458333       0.465517   0.590909
+    # std          0.824062       0.706251   0.497350
+    # min          0.000000       0.000000   0.000000
+    # 25%          0.000000       0.000000   0.000000
+    # 50%          0.000000       0.000000   1.000000
+    # 75%          0.250000       1.000000   1.000000
+    # max          2.000000       2.000000   1.000000
     
     
     
