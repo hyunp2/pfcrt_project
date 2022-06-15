@@ -545,8 +545,8 @@ class ProtBertClassifier(pl.LightningModule):
             },
         ]
         optimizer = optim.AdamW(parameters, lr=self.hparam.learning_rate)
-        total_training_steps = len(self.train_dataloader()) * self.hparam.epoches
-        warmup_steps = total_training_steps // opt.warm_up_split
+        total_training_steps = len(self.train_dataloader()) * self.hparam.max_epoches
+        warmup_steps = total_training_steps // self.hparam.warm_up_split
         scheduler = get_linear_schedule_with_warmup(
             optimizer,
             num_warmup_steps=total_training_steps,
