@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import torch
 import attrs
+from typing import *
 
 @attrs.define
 class DataParser(object):
@@ -16,6 +17,12 @@ class DataParser(object):
     def read_file(filename: str):
         data = pd.read_xlsx(f"{filename}")
         return data
+    
+    @staticmethod
+    def select_columns(df: pd.DataFrame, col_names: List[str]=["PfCRT Isoform", "Amino Acid Sequence", 
+                                                               "PPQ Resistance", "CQ Resistance", "Fitness"]):
+        return df.loc[:,col_names]
+    
     
 
     
