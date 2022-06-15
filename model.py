@@ -485,7 +485,7 @@ class ProtBertClassifier(pl.LightningModule):
  
     @staticmethod
     def plot_confusion(ground_truth: np.ndarray, predictions: np.ndarray, class_names: np.ndarray=np.array([0,1])):
-        from sklearn.metrics import RocCurveDisplay, PrecisionRecallDisplay, 
+        from sklearn.metrics import RocCurveDisplay, PrecisionRecallDisplay
         from sklearn.calibration import CalibrationDisplay
         cm = wandb.plot.confusion_matrix(
             y_true=ground_truth,
