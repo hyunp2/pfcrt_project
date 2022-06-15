@@ -5,7 +5,6 @@ import attrs
 from typing import *
 import os, sys, shutil, subprocess, pathlib
 
-@attrs.define
 class DataParser(object):
     def __init__(self, filename:str = None):
         data = self.read_file(filename)
