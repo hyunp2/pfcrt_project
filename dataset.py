@@ -95,8 +95,8 @@ class NERSequenceDataset(torch.utils.data.Dataset):
 if __name__ == "__main__":
     from train import get_args
     hparam = get_args()
-#     dataset = load_dataset("yarongef/human_proteome_triplets", cache_dir=hparam.load_data_directory)
-#     tokenizer=BertTokenizer.from_pretrained("Rostlab/prot_bert",do_lower_case=False, return_tensors="pt",cache_dir=hparam.load_model_directory)
+    dataset = load_dataset("yarongef/human_proteome_triplets", cache_dir=hparam.load_data_directory)
+    tokenizer=BertTokenizer.from_pretrained("Rostlab/prot_bert",do_lower_case=False, return_tensors="pt",cache_dir=hparam.load_model_directory)
     
 #     stage="train"
 #     x = []
