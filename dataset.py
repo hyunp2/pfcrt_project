@@ -103,19 +103,23 @@ if __name__ == "__main__":
 #     for i in range(len(dataset[stage]["Seq"])):
 #         x.append(' '.join(dataset[stage]["Seq"][i]))
 #     proper_inputs = x #Spaced btw letters
+
     import explore_data as ed
     parser = ed.DataParser(filename="pfcrt.csv")
     data = parser.data
     data_trunc = parser.select_columns() 
+    
     x = []
     for i in range(len(data_trunc)):
-        data_trunc.iloc[i,]
+        x.append(' '.join(data_trunc.iloc[i,1])) #AA Sequence
+    proper_inputs = x
     
     inputs = tokenizer.batch_encode_plus(proper_inputs,
                                       add_special_tokens=True,
                                       padding=True,
-                                      truncation=True, return_tensors="pt",
+                     .                 truncation=True, return_tensors="pt",
                                       max_length=hparam.max_length) #Tokenize inputs as a dict type of Tensors
-    targets = dataset[stage]["label"] #list type
-    targets = torch.Tensor(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
+    
+    targets = data_trunc.iloc[:,2:].values #list type including nans; (B,3)
+    targets = torch.from_numpy(targets).view(len(targets), -1) #target is originally list -> change to Tensor (B,1)
         
