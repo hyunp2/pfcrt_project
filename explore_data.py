@@ -85,7 +85,8 @@ if __name__ == "__main__":
     custom_dataloader = torch.utils.data.DataLoader(dataset, shuffle=True, batch_size=hparams.batch_size)
     
     batch = iter(custom_dataloader).next()
-    model.forward(**batch) #BL
+    inputs_, targets_ = batch
+    model.forward(**inputs_) #BL
 #     trainer.predict(model, dataloaders=custom_dataloader)
     
 #     python -m explore_data --ngpus 1 --accelerator gpu --strategy ddp --load-model-checkpoint epoch=16-train_loss_mean=0.00-val_loss_mean=0.32.ckpt -b 4
