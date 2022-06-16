@@ -66,10 +66,11 @@ if __name__ == "__main__":
         )
     
     import dataset as ds
-    parser = DataParser(filename="pfcrt.csv")
-    data = parser.data
-    data_trunc = parser.select_columns() 
-    
+    from train import get_args
+    hparam = get_args()
+#     dataset = load_dataset("yarongef/human_proteome_triplets", cache_dir=hparam.load_data_directory)
+    tokenizer=BertTokenizer.from_pretrained("Rostlab/prot_bert",do_lower_case=False, return_tensors="pt",cache_dir=hparam.load_model_directory)
+
     x = []
     for i in range(len(data_trunc)):
         x.append(' '.join(data_trunc.iloc[i,1])) #AA Sequence
@@ -80,11 +81,10 @@ if __name__ == "__main__":
                                       max_length=hparam.max_length) #Tokenize inputs as a dict type of Tensors
     targets = data_trunc.iloc[:,2:].values #list type including nans; (B,3)
     targets = torch.from_numpy(targets).view(len(targets), -1) #target is originally list -> change to Tensor (B,1)
-    dataset = SequenceDataset(inputs=inputs, targets=targets)
-    dataloader = torch.utils.data.DataLoader(dataset, shuffle=True, batch_size=4)
+    dataset = ds.SequenceDataset(inputs=inputs, targets=targets)
+    custom_dataloader = torch.utils.data.DataLoader(dataset, shuffle=True, batch_size=4)
     
-    test_dataloader = model.test_dataloader()
-    trainer.predict(model, dataloaders=test_dataloader)
+    trainer.predict(model, dataloaders=custom_dataloader)
     
 #     python -m explore_data --ngpus 1 --accelerator ddp --load-model-checkpoint epoch=59-train_loss_mean=0.95-val_loss_mean=0.18.ckpt -b 512
 
