@@ -63,12 +63,12 @@ if __name__ == "__main__":
     
     model = Model.ProtBertClassifier.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams )
     
-    trainer = pl.Trainer(
-        strategy=hparams.strategy,
-        accelerator=hparams.accelerator,
-        devices=hparams.ngpus,
-        default_root_dir=hparams.load_model_directory,
-        )
+#     trainer = pl.Trainer(
+#         strategy=hparams.strategy,
+#         accelerator=hparams.accelerator,
+#         devices=hparams.ngpus,
+#         default_root_dir=hparams.load_model_directory,
+#         )
     
     import dataset as ds
 #     dataset = load_dataset("yarongef/human_proteome_triplets", cache_dir=hparams.load_data_directory)
