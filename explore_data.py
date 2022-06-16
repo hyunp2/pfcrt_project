@@ -84,7 +84,9 @@ if __name__ == "__main__":
     dataset = ds.SequenceDataset(inputs=inputs, targets=targets)
     custom_dataloader = torch.utils.data.DataLoader(dataset, shuffle=True, batch_size=4)
     
-    trainer.predict(model, dataloaders=custom_dataloader)
+    batch = iter(custom_dataloader).next()
+    model.forward(batch) #BL
+#     trainer.predict(model, dataloaders=custom_dataloader)
     
 #     python -m explore_data --ngpus 1 --accelerator ddp --load-model-checkpoint epoch=59-train_loss_mean=0.95-val_loss_mean=0.18.ckpt -b 512
 
