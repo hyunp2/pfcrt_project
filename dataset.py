@@ -103,7 +103,14 @@ if __name__ == "__main__":
 #     for i in range(len(dataset[stage]["Seq"])):
 #         x.append(' '.join(dataset[stage]["Seq"][i]))
 #     proper_inputs = x #Spaced btw letters
-    import 
+    import explore_data as ed
+    parser = ed.DataParser(filename="pfcrt.csv")
+    data = parser.data
+    data_trunc = parser.select_columns() 
+    x = []
+    for i in range(len(data_trunc)):
+        data_trunc.iloc[i,]
+    
     inputs = tokenizer.batch_encode_plus(proper_inputs,
                                       add_special_tokens=True,
                                       padding=True,
