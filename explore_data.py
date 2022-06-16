@@ -58,6 +58,9 @@ if __name__ == "__main__":
     # ------------------------
     # 1 INIT LIGHTNING MODEL
     # ------------------------
+    hparams.load_model_checkpoint = "epoch=16-train_loss_mean=0.00-val_loss_mean=0.32.ckpt"
+    hparams.batch_size = 4
+    
     model = Model.ProtBertClassifier.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams )
     
     trainer = pl.Trainer(
