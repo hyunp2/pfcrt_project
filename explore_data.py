@@ -64,6 +64,25 @@ if __name__ == "__main__":
         devices=hparams.ngpus,
         default_root_dir=hparams.load_model_directory,
         )
+    
+    import dataset as ds
+    parser = DataParser(filename="pfcrt.csv")
+    data = parser.data
+    data_trunc = parser.select_columns() 
+    
+    x = []
+    for i in range(len(data_trunc)):
+        x.append(' '.join(data_trunc.iloc[i,1])) #AA Sequence
+    proper_inputs = x
+    inputs = tokenizer.batch_encode_plus(proper_inputs,
+                                      add_special_tokens=True,
+                                      padding=True, truncation=True, return_tensors="pt",
+                                      max_length=hparam.max_length) #Tokenize inputs as a dict type of Tensors
+    targets = data_trunc.iloc[:,2:].values #list type including nans; (B,3)
+    targets = torch.from_numpy(targets).view(len(targets), -1) #target is originally list -> change to Tensor (B,1)
+    dataset = SequenceDataset(inputs=inputs, targets=targets)
+    dataloader = torch.utils.data.DataLoader(dataset, shuffle=True, batch_size=4)
+    
     test_dataloader = model.test_dataloader()
     trainer.predict(model, dataloaders=test_dataloader)
     
