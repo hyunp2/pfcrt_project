@@ -38,6 +38,7 @@ def get_args():
     parser.add_argument('--dataset', type=str, default="yarongef/human_proteome_triplets", help='pass dataset...')  
 
     #Optimizer related
+    parser.add_argument('--optimizer', default="adamw", type=str, help='optimizer')
     parser.add_argument('--max-epochs', default=60, type=int, help='number of epochs max')
     parser.add_argument('--min-epochs', default=1, type=int, help='number of epochs min')
     parser.add_argument('--batch-size', '-b', default=2048, type=int, help='batch size')
