@@ -116,8 +116,7 @@ if __name__ == "__main__":
     
     inputs = tokenizer.batch_encode_plus(proper_inputs,
                                       add_special_tokens=True,
-                                      padding=True,
-                     .                 truncation=True, return_tensors="pt",
+                                      padding=True, truncation=True, return_tensors="pt",
                                       max_length=hparam.max_length) #Tokenize inputs as a dict type of Tensors
     
     targets = data_trunc.iloc[:,2:].values #list type including nans; (B,3)
