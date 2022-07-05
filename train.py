@@ -133,9 +133,14 @@ def _main():
     # ------------------------
     # N INIT TRAINER
     # ------------------------
-    #tb_logger = pl.loggers.TensorBoardLogger("tb_logs", name="my_model")
+#     tb_logger = pl.loggers.TensorBoardLogger("tb_logs", name="my_model")
+    csv_logger = pl.loggers.CSVLogger(save_dir=hparams.load_model_directory)
 #     plugins = DDPPlugin(find_unused_parameters=False) if hparams.accelerator == "ddp" else None
     
+    
+    # ------------------------
+    # MISC.
+    # ------------------------
     if hparams.load_model_checkpoint and not hparams.finetune:
         resume_ckpt = os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint)
     elif hparams.load_model_checkpoint and hparams.finetune:
@@ -147,6 +152,7 @@ def _main():
         hparams.strategy = None
         
     trainer = pl.Trainer(
+        logger=[csv_logger]
         max_epochs=hparams.max_epochs,
         min_epochs=hparams.min_epochs,
         callbacks = [early_stop_callback, checkpoint_callback, swa_callback, progbar_callback, timer_callback],
