@@ -4,8 +4,12 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 #https://github.com/clcarwin/focal_loss_pytorch/blob/e11e75bad957aecf641db6998a1016204722c1bb/focalloss.py#L30-L31
+#Overall, however, the benefit of changing γ is much larger, and indeed the best α’s ranged in just [.25,.75] (we tested α ∈ [.01, .999]). 
+#We use γ = 2.0 with α = .25 for all experiments but α = .5 works nearly as well (.4 AP lower). [Focal Loss for Dense Object Detection]
+
 class FocalLoss(nn.Module):
-    def __init__(self, gamma=0, alpha=None, size_average=True):
+    """SOFTMAX (only best class contrib) (not SIGMOID; adding all class contribs)"""
+    def __init__(self, gamma=2., alpha=None, size_average=True):
         super(FocalLoss, self).__init__()
         self.gamma = gamma
         self.alpha = alpha
@@ -14,16 +18,17 @@ class FocalLoss(nn.Module):
         self.size_average = size_average
 
     def forward(self, input, target):
-        if input.dim()>2:
-            input = input.view(input.size(0),input.size(1),-1)  # N,C,H,W => N,C,H*W
-            input = input.transpose(1,2)    # N,C,H*W => N,H*W,C
-            input = input.contiguous().view(-1,input.size(2))   # N,H*W,C => N*H*W,C
-        target = target.view(-1,1)
+        if input.dim() == 2:
+#             input = input.view(input.size(0),input.size(1),-1)  # N,C,H,W => N,C,H*W
+#             input = input.transpose(1,2)    # N,C,H*W => N,H*W,C
+#             input = input.contiguous().view(-1,input.size(2))   # N,H*W,C => N*H*W,C
+            input = input #B,dim
+        target = target.view(-1,1) #B,1
 
         logpt = F.log_softmax(input)
         logpt = logpt.gather(1,target)
         logpt = logpt.view(-1)
-        pt = Variable(logpt.data.exp())
+        pt = logpt.data.exp().data #non-diff
 
         if self.alpha is not None:
             if self.alpha.type()!=input.data.type():
