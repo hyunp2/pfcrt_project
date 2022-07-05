@@ -114,12 +114,12 @@ class ProtBertClassifier(ProtBertClassifier):
             logits0 = predictions.get("logits0", 0)
             logits1 = predictions.get("logits1", 0)
             logits2 = predictions.get("logits2", 0)
-            target0 = targets.get("labels", None)[:,0]
-            target1 = targets.get("labels", None)[:,1]
-            target2 = targets.get("labels", None)[:,2]
-            loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing)(logits0, target0)
-            loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing)(logits1, target1)
-            loss2 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing)(logits2, target2)
+            target0 = targets.get("labels", None)[:,0].to(logits0).long()
+            target1 = targets.get("labels", None)[:,1].to(logits0).long()
+            target2 = targets.get("labels", None)[:,2].to(logits0).long()
+            loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=100)(logits0, target0) #ignore_index=100 is from dataset!
+            loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=100)(logits1, target1) #ignore_index=100 is from dataset!
+            loss2 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=100)(logits2, target2) #ignore_index=100 is from dataset!
             return (loss0 + loss1 + loss2).mean()
         
         self._loss = loss_fn
