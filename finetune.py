@@ -135,9 +135,9 @@ class ProtBertClassifier(ProtBertClassifier):
             valid_targets0 = valid_targets[valid_targets[:,0],0].to(targets) #only for targ0
             valid_targets1 = valid_targets[valid_targets[:,1],1].to(targets) #only for targ1
             valid_targets2 = valid_targets[valid_targets[:,2],2].to(targets) #only for targ2
-            self.weight0 = 1 / (torch.nn.functional.one_hot(valid_targets0).sum(dim=0) / valid_targets0.size(0) + torch.finfo(torch.float32).eps)
-            self.weight1 = 1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)
-            self.weight2 = 1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)
+            self.weight0 = (1 / (torch.nn.functional.one_hot(valid_targets0).sum(dim=0) / valid_targets0.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
+            self.weight1 = (1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
+            self.weight2 = (1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
         else:
             self.weight0 = None
             self.weight1 = None
