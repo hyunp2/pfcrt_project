@@ -93,7 +93,7 @@ if __name__ == "__main__":
     inputs_, targets_ = batch
     out = model.forward(**inputs_) #B3
     print(out)
-    print(model.loss(out, targets))
+    print(model.loss(out, targets_))
 #     trainer.predict(model, dataloaders=custom_dataloader)
     
 #     python -m explore_data --ngpus 1 --accelerator gpu --strategy ddp --load-model-checkpoint epoch=16-train_loss_mean=0.00-val_loss_mean=0.32.ckpt -b 4
