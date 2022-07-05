@@ -38,7 +38,7 @@ class ProtBertClassifier(ProtBertClassifier):
         super(ProtBertClassifier, self).__init__(hparam=hparam)
         parser = DataParser.get_data("pfcrt.csv")
         data = parser.data
-        data_trunc = parser.select_columns(fill_na=100)
+        data_trunc = parser.select_columns(fill_na=self.hparam.fillna_val)
         self.dataset = data_trunc
         self.num_labels = 2 #; Filippo dataset
         # self.metric_acc = torchmetrics.Accuracy()
@@ -117,9 +117,9 @@ class ProtBertClassifier(ProtBertClassifier):
             target0 = targets.get("labels", None)[:,0].to(logits0).long()
             target1 = targets.get("labels", None)[:,1].to(logits0).long()
             target2 = targets.get("labels", None)[:,2].to(logits0).long()
-            loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=100)(logits0, target0) #ignore_index=100 is from dataset!
-            loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=100)(logits1, target1) #ignore_index=100 is from dataset!
-            loss2 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=100)(logits2, target2) #ignore_index=100 is from dataset!
+            loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val)(logits0, target0) #ignore_index=100 is from dataset!
+            loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val)(logits1, target1) #ignore_index=100 is from dataset!
+            loss2 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val)(logits2, target2) #ignore_index=100 is from dataset!
             return (loss0 + loss1 + loss2).mean()
         
         self._loss = loss_fn
