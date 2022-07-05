@@ -177,5 +177,5 @@ if __name__ == "__main__":
     _main()
     #CUDA_VISIBLE_DEVICES=0 python -m train -ls 0.1 -b 512 -ckpt epoch=4-val_loss=0.30-val_acc=0.94.ckpt
     #python -m train --ngpus "auto" --accelerator gpu --strategy ddp -b 512 
-    #CUDA_VISIBLE_DEVICES=0 python -m train -ls 0.1 -b 8 --ngpus "auto" --accelerator gpu --strategy none --finetune -ckpt epoch=53-train_loss_mean=0.00-val_loss_mean=0.19.ckpt
+    #CUDA_VISIBLE_DEVICES=0 python -m train -ls 0.1 -b 8 --ngpus "auto" --accelerator gpu --strategy none --finetune -ckpt ckpt_for_finetune.ckpt
     #python -m train --ngpus "auto" --accelerator gpu --strategy ddp -b 512 
