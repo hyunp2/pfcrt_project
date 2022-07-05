@@ -40,7 +40,7 @@ class ProtBertClassifier(ProtBertClassifier):
         data = parser.data
         data_trunc = parser.select_columns()
         self.dataset = data_trunc
-        self.num_labels = 3 #; Filippo dataset
+        self.num_labels = 2 #; Filippo dataset
         # self.metric_acc = torchmetrics.Accuracy()
         self.z_dim = self.hparam.z_dim #Add this!
         if self.hparam.loss == "contrastive": self.register_parameter("W", torch.nn.Parameter(torch.rand(self.z_dim, self.z_dim))) #CURL purpose
