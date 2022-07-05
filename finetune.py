@@ -72,12 +72,28 @@ class ProtBertClassifier(ProtBertClassifier):
             nn.Tanh(),
         )
         
-        self.classifier = nn.Sequential(
+        self.classifier0 = nn.Sequential(
             nn.Linear(self.encoder_features, self.encoder_features),
             nn.SiLU(inplace=True),
             nn.Linear(self.encoder_features, self.encoder_features),
             nn.SiLU(inplace=True),
-            nn.Linear(self.encoder_features, self.num_labels),
+            nn.Linear(self.encoder_features, 3),
+        )
+        
+        self.classifier1 = nn.Sequential(
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.SiLU(inplace=True),
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.SiLU(inplace=True),
+            nn.Linear(self.encoder_features, 3),
+        )
+        
+        self.classifier2 = nn.Sequential(
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.SiLU(inplace=True),
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.SiLU(inplace=True),
+            nn.Linear(self.encoder_features, 2),
         )
         
         if self.hparam.loss == "contrastive": 
@@ -94,7 +110,19 @@ class ProtBertClassifier(ProtBertClassifier):
  
     def __build_loss(self):
         """ Initializes the loss function/s. """
-        self._loss = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing)
+        def loss_fn(predictions: dict, targets: dict):
+            logits0 = predictions.get("logits0", 0)
+            logits1 = predictions.get("logits1", 0)
+            logits2 = predictions.get("logits2", 0)
+            target0 = targets.get("labels", None)[:,0]
+            target1 = targets.get("labels", None)[:,1]
+            target2 = targets.get("labels", None)[:,2]
+            loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing)(logits0, target0)
+            loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing)(logits1, target1)
+            loss2 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing)(logits2, target2)
+            return (loss0 + loss1 + loss2).mean()
+        
+        self._loss = loss_fn
 
     def compute_logits_CURL(self, z_a, z_pos):
         """
@@ -184,24 +212,26 @@ class ProtBertClassifier(ProtBertClassifier):
                                       "attention_mask": attention_mask,
                                       }) 
         logits = self.head[0](pooling) #B,dim; only the first module of sequential
-        logits = self.classifier(logits) #B,3
+        logits0 = self.classifier0(logits) #B,3
+        logits1 = self.classifier1(logits) #B,3
+        logits2 = self.classifier2(logits) #B,3
         
         if return_dict:
             if self.hparam.loss == "classification":
-                return {"logits": logits} #B,num_labels
+                return {"logits0": logits0, "logits1": logits1, "logits2": logits2} #B,num_labels
             elif self.hparam.loss == "contrastive":
                 logits = self.fhook["encoded_feats"]
                 return {"logits": logits} #B, z_dim (differentiable)
         else:
             if self.hparam.loss == "classification":
-                return logits #B,num_labels
+                return logits0, logits1, logits2  #(B,3); (B,3); (B,2)
             elif self.hparam.loss == "contrastive":
                 logits = self.fhook["encoded_feats"]
                 return logits #B, z_dim (differentiable)
 
     def loss(self, predictions: dict, targets: torch.Tensor) -> torch.tensor:
         if self.hparam.loss == "classification" and not self.ner:
-            return self._loss(predictions["logits"], targets["labels"].view(-1, )) #Crossentropy ;; input: (B,2) target (B,)
+            return self._loss(predictions, targets) #Crossentropy ;; input: dict[(B,3);(B,3);(B,2)] target dict(B,3)
         elif self.hparam.loss == "classification" and self.ner:
             return self._loss(predictions["logits"], targets["labels"].view(-1, self.num_labels)) #CRF ;; input (B,L,C) target (B,L) ;; B->num_frames & L->num_aa_residues & C->num_lipid_types
         elif self.hparam.loss == "contrastive":
@@ -430,7 +460,7 @@ class ProtBertClassifier(ProtBertClassifier):
 
     def val_dataloader(self) -> DataLoader:
         """ Function that loads the validation set. """
-        self._dev_dataset = self.tokenizing(stage="test")
+        self._dev_dataset = self.tokenizing(stage="val")
         return super().__init__()
 
     def test_dataloader(self) -> DataLoader:
