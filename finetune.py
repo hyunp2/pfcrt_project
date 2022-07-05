@@ -53,17 +53,7 @@ class ProtBertClassifier(ProtBertClassifier):
 
         self.freeze_encoder()
         
-    def prepare_for_finetune(self, ):
-        #Call only after loading checkpoint!
-        self.head = self.head[0] #only the first part of head-module
-        self.classifier = nn.Sequential(
-            nn.Linear(self.encoder_features, self.encoder_features),
-            nn.SiLU(inplace=True),
-            nn.Linear(self.encoder_features, self.encoder_features),
-            nn.SiLU(inplace=True),
-            nn.Linear(self.encoder_features, self.num_labels),
-        )
-        
+
     def __build_model(self) -> None:
         """ Init BERT model + tokenizer + classification head."""
         #model = locals()["model"] if locals()["model"] and isinstance(locals()["model"], BertModel) else BertModel.from_pretrained(self.model_name, cache_dir=self.hparam.load_model_directory)
@@ -81,6 +71,15 @@ class ProtBertClassifier(ProtBertClassifier):
             nn.Linear(self.encoder_features, self.num_labels),
             nn.Tanh(),
         )
+        
+        self.classifier = nn.Sequential(
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.SiLU(inplace=True),
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.SiLU(inplace=True),
+            nn.Linear(self.encoder_features, self.num_labels),
+        )
+        
         if self.hparam.loss == "contrastive": 
             self.make_hook()
 
@@ -122,11 +121,15 @@ class ProtBertClassifier(ProtBertClassifier):
             logger.info(f"\n-- Encoder model fine-tuning")
             for param in self.model.parameters():
                 param.requires_grad = True
+            for param in self.head.parameters():
+                param.requires_grad = True
             self._frozen = False
 
     def freeze_encoder(self) -> None:
         """ freezes the encoder layer. """
         for param in self.model.parameters():
+            param.requires_grad = False
+        for param in self.head.parameters():
             param.requires_grad = False
         self._frozen = True
 
@@ -180,8 +183,9 @@ class ProtBertClassifier(ProtBertClassifier):
                                       "cls_token_embeddings": word_embeddings[:, 0],
                                       "attention_mask": attention_mask,
                                       }) 
-        logits = self.head(pooling) #B,dim; call only after loading checkpoint!!!
+        logits = self.head[0](pooling) #B,dim; only the first module of sequential
         logits = self.classifier(logits) #B,3
+        
         if return_dict:
             if self.hparam.loss == "classification":
                 return {"logits": logits} #B,num_labels
