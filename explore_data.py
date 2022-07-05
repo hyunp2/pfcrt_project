@@ -7,6 +7,7 @@ from typing import *
 import os, sys, shutil, subprocess, pathlib
 from train import get_args
 import model as Model
+import finetune as Fmodel
 from transformers import BertTokenizer, BertModel, AutoModel, AutoTokenizer, BertConfig, BertForSequenceClassification, get_linear_schedule_with_warmup, Adafactor, AdamW
 
 
@@ -61,8 +62,9 @@ if __name__ == "__main__":
     hparams.load_model_checkpoint = "epoch=16-train_loss_mean=0.00-val_loss_mean=0.32.ckpt"
     hparams.batch_size = 4
     
-    model = Model.ProtBertClassifier.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams )
-    
+#     model = Model.ProtBertClassifier.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams )
+    model = FModel.ProtBertClassifier.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams )
+
 #     trainer = pl.Trainer(
 #         strategy=hparams.strategy,
 #         accelerator=hparams.accelerator,
