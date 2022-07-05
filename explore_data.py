@@ -31,18 +31,21 @@ class DataParser(object):
         return data
     
     def select_columns(self, col_names: List[str]=["PfCRT Isoform", "Amino Acid Sequence", 
-                                                               "PPQ Resistance", "CQ Resistance", "Fitness"], drop_duplicate_on="Amino Acid Sequence"):
+                                                               "PPQ Resistance", "CQ Resistance", "Fitness"], drop_duplicate_on="Amino Acid Sequence", fill_na=None):
         if drop_duplicate_on == None:
-            return self.data.loc[:,col_names]
+            return self.data.loc[:,col_names].fillna(value=fill_na, inplace=True)
         elif drop_duplicate_on != None:
-            return self.data.loc[:,col_names].drop_duplicates(drop_duplicate_on)
+            return self.data.loc[:,col_names].drop_duplicates(drop_duplicate_on).fillna(value=fill_na, inplace=True)
         
     
 if __name__ == "__main__":
     parser = DataParser(filename="pfcrt.csv")
     data = parser.data
     data_trunc = parser.select_columns()
-    
+    print(data_trunc)
+    data_trunc = parser.select_columns(fill_na=100) #arbitrary ignore val
+    print(data_trunc)
+
     # data_trunc.describe()
     #        PPQ Resistance  CQ Resistance    Fitness
     # count       48.000000      58.000000  44.000000
