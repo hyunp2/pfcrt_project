@@ -91,7 +91,8 @@ if __name__ == "__main__":
     
     batch = iter(custom_dataloader).next()
     inputs_, targets_ = batch
-    model.forward(**inputs_) #BL
+    out = model.forward(**inputs_) #B3
+    print(out)
 #     trainer.predict(model, dataloaders=custom_dataloader)
     
 #     python -m explore_data --ngpus 1 --accelerator gpu --strategy ddp --load-model-checkpoint epoch=16-train_loss_mean=0.00-val_loss_mean=0.32.ckpt -b 4
