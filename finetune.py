@@ -260,18 +260,18 @@ class ProtBertClassifier(ProtBertClassifier):
         labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
         labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
 
-#         train_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-#         train_acc1 = self.metric_acc1(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-#         train_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+        train_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+        train_acc1 = self.metric_acc1(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+        train_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 
-        output = {"train_loss": loss_train}#, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2} #NEVER USE ORDEREDDICT!!!!
+        output = {"train_loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2} #NEVER USE ORDEREDDICT!!!!
         wandb.log(output)
         self.log("train_loss", loss_train, prog_bar=True)
-#         self.log("train_acc0", train_acc0, prog_bar=True)
-#         self.log("train_acc1", train_acc1, prog_bar=True)
-#         self.log("train_acc2", train_acc2, prog_bar=True)
+        self.log("train_acc0", train_acc0, prog_bar=True)
+        self.log("train_acc1", train_acc1, prog_bar=True)
+        self.log("train_acc2", train_acc2, prog_bar=True)
 
-        return {"loss": loss_train}#, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2}
+        return {"loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2}
 
     def training_epoch_end(self, outputs: list) -> dict:
         train_loss_mean = torch.stack([x['loss'] for x in outputs]).mean()
