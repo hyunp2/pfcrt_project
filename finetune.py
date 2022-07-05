@@ -510,7 +510,7 @@ class ProtBertClassifier(ProtBertClassifier):
         targets = torch.from_numpy(targets).view(len(targets), -1) #target is originally list -> change to Tensor (B,1)
         
         dataset = dl.SequenceDataset(inputs, targets)
-        train, val, test = torch.utils.data.random_split(dataset, self._get_split_sizes(0.8, dataset),
+        train, val, test = torch.utils.data.random_split(dataset, self._get_split_sizes(self.hparam.train_frac, dataset),
                                                                 generator=torch.Generator().manual_seed(0))
         if stage == "train":
             dataset = train
