@@ -467,9 +467,8 @@ class ProtBertClassifier(ProtBertClassifier):
         """ Sets different Learning rates for different parameter groups. """
         parameters = [
             {"params": self.head.parameters()},
-            {
-                "params": self.model.parameters(), 
-            },
+            {"params": self.model.parameters()},
+            {"params": self.classifier.parameters()}
         ]
         if self.hparam.optimizer == "adafactor":
             optimizer = Adafactor(parameters, relative_step=True)
