@@ -63,7 +63,7 @@ if __name__ == "__main__":
     hparams.batch_size = 4
     
 #     model = Model.ProtBertClassifier.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams )
-    model = FModel.ProtBertClassifier.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams )
+    model = FModel.ProtBertClassifier.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams, strict=False )
 
 #     trainer = pl.Trainer(
 #         strategy=hparams.strategy,
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     
     import dataset as ds
 #     dataset = load_dataset("yarongef/human_proteome_triplets", cache_dir=hparams.load_data_directory)
-    tokenizer=BertTokenizer.from_pretrained("Rostlab/prot_bert",do_lower_case=False, return_tensors="pt",cache_dir=hparams.load_model_directory)
+    tokenizer=BertTokenizer.from_pretrained("Rostlab/prot_bert",do_lower_case=False, return_tensors="pt", cache_dir=hparams.load_model_directory)
 
     x = []
     for i in range(len(data_trunc)):
