@@ -152,7 +152,7 @@ def _main():
         hparams.strategy = None
         
     trainer = pl.Trainer(
-        logger=[csv_logger]
+        logger=[csv_logger],
         max_epochs=hparams.max_epochs,
         min_epochs=hparams.min_epochs,
         callbacks = [early_stop_callback, checkpoint_callback, swa_callback, progbar_callback, timer_callback],
