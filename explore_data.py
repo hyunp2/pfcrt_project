@@ -41,8 +41,8 @@ class DataParser(object):
 if __name__ == "__main__":
     parser = DataParser(filename="pfcrt.csv")
     data = parser.data
-    data_trunc = parser.select_columns()
-    print(data_trunc)
+#     data_trunc = parser.select_columns()
+#     print(data_trunc)
     data_trunc = parser.select_columns(fill_na=100) #arbitrary ignore val
     print(data_trunc)
 
