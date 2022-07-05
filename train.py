@@ -166,7 +166,7 @@ def _main():
 
 if __name__ == "__main__":
     _main()
-    #CUDA_VISIBLE_DEVICES=0 python main.py -ls 0.1 -b 512 -ckpt epoch=4-val_loss=0.30-val_acc=0.94.ckpt
+    #CUDA_VISIBLE_DEVICES=0 python -m train -ls 0.1 -b 512 -ckpt epoch=4-val_loss=0.30-val_acc=0.94.ckpt
     #python -m train --ngpus "auto" --accelerator gpu --strategy ddp -b 512 
-    #CUDA_VISIBLE_DEVICES=0 python main.py -ls 0.1 -b 8 --ngpus "auto" --accelerator gpu --strategy None --finetune
+    #CUDA_VISIBLE_DEVICES=0 python -m train -ls 0.1 -b 8 --ngpus "auto" --accelerator gpu --strategy None --finetune
     #python -m train --ngpus "auto" --accelerator gpu --strategy ddp -b 512 
