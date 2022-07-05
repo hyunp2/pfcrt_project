@@ -33,9 +33,13 @@ class DataParser(object):
     def select_columns(self, col_names: List[str]=["PfCRT Isoform", "Amino Acid Sequence", 
                                                                "PPQ Resistance", "CQ Resistance", "Fitness"], drop_duplicate_on="Amino Acid Sequence", fill_na=None):
         if drop_duplicate_on == None:
-            return self.data.loc[:,col_names].fillna(value=fill_na, inplace=True)
+            data = self.data.loc[:,col_names]
+            data.fillna(value=fill_na, inplace=True)
+            return data
         elif drop_duplicate_on != None:
-            return self.data.loc[:,col_names].drop_duplicates(drop_duplicate_on).fillna(value=fill_na, inplace=True)
+            data = self.data.loc[:,col_names].drop_duplicates(drop_duplicate_on)
+            data.fillna(value=fill_na, inplace=True)
+            return data
         
     
 if __name__ == "__main__":
