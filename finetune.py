@@ -238,47 +238,80 @@ class ProtBertClassifier(ProtBertClassifier):
             return self.compute_logits_CURL(predictions["logits"], predictions["logits"]) #Crossentropy -> Need second pred to be transformed! each pred is (B,z_dim) shape
 
     def on_train_epoch_start(self, ) -> None:
-        self.metric_acc = torchmetrics.Accuracy()
-
+        self.metric_acc0 = torchmetrics.Accuracy()
+        self.metric_acc1 = torchmetrics.Accuracy()
+        self.metric_acc2 = torchmetrics.Accuracy()
+        
     def training_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
         #import pdb; pdb.set_trace()
-        inputs, targets = batch #Both are tesors
-        model_out = self.forward(**inputs) #logicts dictionary
-        loss_train = self.loss(model_out, targets) #scalar loss
-        y = targets["labels"].view(-1,)
-        y_hat = model_out["logits"]
-        labels_hat = torch.argmax(y_hat, dim=-1).to(y)
-        train_acc = self.metric_acc(labels_hat.detach().cpu().view(-1,), y.detach().cpu().view(-1,)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+        inputs, targets = batch
+        model_out = self.forward(**inputs)
+        #print(model_out.size(), targets["labels"].size())
+        loss_train = self.loss(model_out, targets)
+        
+        y = targets["labels"].view(-1,3) #B3
+        y0 = y[:,0]
+        y1 = y[:,1]
+        y2 = y[:,2]
+        y_hat0 = model_out["logits0"] #(B,3);(B,3),(B,2)
+        y_hat1 = model_out["logits1"] #(B,3);(B,3),(B,2)
+        y_hat2 = model_out["logits2"] #(B,3);(B,3),(B,2)
+        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y)
+        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
+        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
 
-        output = {"train_loss": loss_train, "train_acc": train_acc} #NEVER USE ORDEREDDICT!!!!
+        train_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+        train_acc1 = self.metric_acc0(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+        train_acc2 = self.metric_acc0(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+
+        output = {"train_loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2} #NEVER USE ORDEREDDICT!!!!
         wandb.log(output)
         self.log("train_loss", loss_train, prog_bar=True)
-        self.log("train_acc", train_acc, prog_bar=True)
-        
-        return {"loss": loss_train, "train_acc": train_acc}
+        self.log("train_acc0", train_acc0, prog_bar=True)
+        self.log("train_acc1", train_acc1, prog_bar=True)
+        self.log("train_acc2", train_acc2, prog_bar=True)
+
+        return {"loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2}
 
     def training_epoch_end(self, outputs: list) -> dict:
-        train_loss_mean = torch.stack([x['train_acc'] for x in outputs]).mean()
+        train_loss_mean = torch.stack([x['loss'] for x in outputs]).mean()
         self.log("epoch", self.current_epoch)
         tqdm_dict = {"epoch_train_loss": train_loss_mean}
         wandb.log(tqdm_dict)
-        self.metric_acc.reset()    
-
+        
+        self.metric_acc0.reset()   
+        self.metric_acc1.reset()   
+        self.metric_acc2.reset()   
+        
     def on_validation_epoch_start(self, ) -> None:
-        self.metric_acc = torchmetrics.Accuracy()
+        self.metric_acc0 = torchmetrics.Accuracy()
+        self.metric_acc1 = torchmetrics.Accuracy()
+        self.metric_acc2 = torchmetrics.Accuracy()
 
     def validation_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
         inputs, targets = batch
         model_out = self.forward(**inputs)
         #print(model_out.size(), targets["labels"].size())
         loss_val = self.loss(model_out, targets)
-        y = targets["labels"].view(-1,) #B or BL
-        y_hat = model_out["logits"] #B2 or BLC
-        labels_hat = torch.argmax(y_hat, dim=-1).to(y)
+        
+        y = targets["labels"].view(-1,3) #B3
+        y0 = y[:,0]
+        y1 = y[:,1]
+        y2 = y[:,2]
+        y_hat0 = model_out["logits0"] #(B,3);(B,3),(B,2)
+        y_hat1 = model_out["logits1"] #(B,3);(B,3),(B,2)
+        y_hat2 = model_out["logits2"] #(B,3);(B,3),(B,2)
+        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y)
+        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
+        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
 
-        val_acc = self.metric_acc(labels_hat.detach().cpu().view(-1), y.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+        val_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+        val_acc1 = self.metric_acc0(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+        val_acc2 = self.metric_acc0(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 
-        output = {"val_loss": loss_val, "val_acc": val_acc} #NEVER USE ORDEREDDICT!!!!
+        output = {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2} #NEVER USE ORDEREDDICT!!!!
+        self.log("val_loss", loss_val, prog_bar=True)
+
         wandb.log(output)
 
         return output
@@ -293,27 +326,42 @@ class ProtBertClassifier(ProtBertClassifier):
             tqdm_dict = {"epoch_val_loss": val_loss_mean}
 
             wandb.log(tqdm_dict)
-            self.metric_acc.reset()   
+            self.metric_acc0.reset()   
+            self.metric_acc1.reset()   
+            self.metric_acc2.reset()   
 
     def on_test_epoch_start(self, ) -> None:
-        self.metric_acc = torchmetrics.Accuracy()
-
+        self.metric_acc0 = torchmetrics.Accuracy()
+        self.metric_acc1 = torchmetrics.Accuracy()
+        self.metric_acc2 = torchmetrics.Accuracy()
+        
     def test_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
 
         inputs, targets = batch
         model_out = self.forward(**inputs)
+        #print(model_out.size(), targets["labels"].size())
         loss_test = self.loss(model_out, targets)
-        y = targets["labels"].view(-1,)
-        y_hat = model_out["logits"]
-        labels_hat = torch.argmax(y_hat, dim=-1).to(y)
-        #import pdb; pdb.set_trace()
-
-        test_acc = self.metric_acc(labels_hat.detach().cpu().view(-1,), y.detach().cpu().view(-1)) #Must mount tensors to CPU
         
-        output = {"test_loss": loss_test, "test_acc": test_acc}
-        wandb.log(output)
-        self.log("test_acc", test_acc, prog_bar=True)
+        y = targets["labels"].view(-1,3) #B3
+        y0 = y[:,0]
+        y1 = y[:,1]
+        y2 = y[:,2]
+        y_hat0 = model_out["logits0"] #(B,3);(B,3),(B,2)
+        y_hat1 = model_out["logits1"] #(B,3);(B,3),(B,2)
+        y_hat2 = model_out["logits2"] #(B,3);(B,3),(B,2)
+        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y)
+        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
+        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
 
+        test_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+        test_acc1 = self.metric_acc0(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+        test_acc2 = self.metric_acc0(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+
+        output = {"test_loss": loss_test, "test_acc0": test_acc0, "test_acc1": test_acc1, "test_acc2": test_acc2} #NEVER USE ORDEREDDICT!!!!
+        self.log("test_loss", loss_test, prog_bar=True)
+
+        wandb.log(output)
+        
         return output
 
     def test_epoch_end(self, outputs: list) -> dict:
@@ -322,7 +370,9 @@ class ProtBertClassifier(ProtBertClassifier):
         tqdm_dict = {"epoch_test_loss": test_loss_mean}
 
         wandb.log(tqdm_dict)
-        self.metric_acc.reset()   
+        self.metric_acc0.reset()   
+        self.metric_acc1.reset()   
+        self.metric_acc2.reset()   
 
     def on_predict_epoch_start(self, ):
         if self.hparam.loss == "classification":
