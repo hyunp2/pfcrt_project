@@ -50,7 +50,7 @@ def get_args():
     parser.add_argument('--warm-up-split', type=int, default=5, help='warmup times')
     parser.add_argument('--scheduler', type=str, default="cosine", help='scheduler type')
     parser.add_argument('--accelerator', "-accl", type=str, default="gpu", help='accelerator type', choices=["cpu","gpu","tpu"])
-    parser.add_argument('--strategy', "-st", default="ddp", help='accelerator type', choices=["ddp_spawn","ddp","dp","ddp2","horovod",None])
+    parser.add_argument('--strategy', "-st", default="ddp", help='accelerator type', choices=["ddp_spawn","ddp","dp","ddp2","horovod","none"])
 
     #Misc.
     parser.add_argument('--seed', type=int, default=42, help='seeding number')
@@ -142,7 +142,10 @@ def _main():
         resume_ckpt = None
     else:
         resume_ckpt = None
-    
+        
+    if hparams.strategy in ["none", None]:
+        hparams.strategy = None
+        
     trainer = pl.Trainer(
         max_epochs=hparams.max_epochs,
         min_epochs=hparams.min_epochs,
@@ -168,5 +171,5 @@ if __name__ == "__main__":
     _main()
     #CUDA_VISIBLE_DEVICES=0 python -m train -ls 0.1 -b 512 -ckpt epoch=4-val_loss=0.30-val_acc=0.94.ckpt
     #python -m train --ngpus "auto" --accelerator gpu --strategy ddp -b 512 
-    #CUDA_VISIBLE_DEVICES=0 python -m train -ls 0.1 -b 8 --ngpus "auto" --accelerator gpu --strategy None --finetune
+    #CUDA_VISIBLE_DEVICES=0 python -m train -ls 0.1 -b 8 --ngpus "auto" --accelerator gpu --strategy none --finetune
     #python -m train --ngpus "auto" --accelerator gpu --strategy ddp -b 512 
