@@ -51,7 +51,7 @@ class ProtBertClassifier(ProtBertClassifier):
 
         # build weights for CE loss
         _ = self.__build_weight(self.hparam.nonuniform_weight) 
-        print(self.weight0, self.weight1, self.weight2)
+#         print(self.weight0, self.weight1, self.weight2)
         
         # Loss criterion initialization.
         _ = self.__build_loss() if not self.ner else self.__build_model_ner()
@@ -125,6 +125,7 @@ class ProtBertClassifier(ProtBertClassifier):
             self.weight0 = self.weight0.to(logits0)
             self.weight1 = self.weight1.to(logits0)
             self.weight2 = self.weight2.to(logits0)
+            
             if self.hparam.use_ce:
                 loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight0)(logits0, target0) #ignore_index=100 is from dataset!
                 loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight1)(logits1, target1) #ignore_index=100 is from dataset!
@@ -134,7 +135,6 @@ class ProtBertClassifier(ProtBertClassifier):
                 loss1 = FocalLoss()(logits1, target1) #ignore_index=100 is from dataset!
                 loss2 = FocalLoss()(logits2, target2) #ignore_index=100 is from dataset!
             return (loss0 + loss1 + loss2).mean()
-        
         
         self._loss = loss_fn
 
