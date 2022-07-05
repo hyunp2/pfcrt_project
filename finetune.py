@@ -48,6 +48,9 @@ class ProtBertClassifier(ProtBertClassifier):
         # build model
         _ = self.__build_model() if not self.ner else self.__build_model_ner()
 
+        # build weights for CE loss
+        _ = self.__build_weight(self.hparam.nonuniform_weight) 
+        
         # Loss criterion initialization.
         _ = self.__build_loss() if not self.ner else self.__build_model_ner()
 
@@ -117,13 +120,29 @@ class ProtBertClassifier(ProtBertClassifier):
             target0 = targets.get("labels", None)[:,0].to(logits0).long()
             target1 = targets.get("labels", None)[:,1].to(logits0).long()
             target2 = targets.get("labels", None)[:,2].to(logits0).long()
-            loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val)(logits0, target0) #ignore_index=100 is from dataset!
-            loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val)(logits1, target1) #ignore_index=100 is from dataset!
-            loss2 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val)(logits2, target2) #ignore_index=100 is from dataset!
+            loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight0)(logits0, target0) #ignore_index=100 is from dataset!
+            loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight1)(logits1, target1) #ignore_index=100 is from dataset!
+            loss2 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight2)(logits2, target2) #ignore_index=100 is from dataset!
             return (loss0 + loss1 + loss2).mean()
         
         self._loss = loss_fn
 
+    def __build_weight(self, nonuniform_weight=True):
+        if nonuniform_weight:
+            targets = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
+            targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
+            valid_targets = (targets < self.hparam.fillna_val) #B,3
+            valid_targets0 = valid_targets[valid_targets[:,0],0] #only for targ0
+            valid_targets1 = valid_targets[valid_targets[:,1],1] #only for targ1
+            valid_targets2 = valid_targets[valid_targets[:,2],2] #only for targ2
+            self.weight0 = 1 / (torch.nn.functional.one_hot(valid_targets0).sum(dim=0) / valid_targets0.size(0) + torch.finfo(torch.float32).eps)
+            self.weight1 = 1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)
+            self.weight2 = 1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)
+        else:
+            self.weight0 = None
+            self.weight1 = None
+            self.weight2 = None
+        
     def compute_logits_CURL(self, z_a, z_pos):
         """
         WIP!
@@ -511,9 +530,7 @@ class ProtBertClassifier(ProtBertClassifier):
                                           max_length=self.hparam.max_length) #Tokenize inputs as a dict type of Tensors
         targets = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
         targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
-        valid_targets = (targets < self.hparam.fillna_val)
-        valid
-        
+
         dataset = dl.SequenceDataset(inputs, targets)
         train, val, test = torch.utils.data.random_split(dataset, self._get_split_sizes(self.hparam.train_frac, dataset),
                                                                 generator=torch.Generator().manual_seed(0))
