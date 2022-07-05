@@ -18,6 +18,7 @@ from torch import optim
 from torch.utils.data import DataLoader
 import argparse
 import model as Model
+import finetune as FModel
 import dataset as dl
 from typing import *
 
@@ -32,6 +33,7 @@ def get_args():
     parser.add_argument('--load-model-directory', "-dirm", type=str, default="/Scr/hyunpark/DL_Sequence_Collab/pfcrt_project/output", help='This is where model is/will be located...')  
     parser.add_argument('--load-model-checkpoint', "-ckpt", type=str, default=None, help='which checkpoint...')  
     parser.add_argument('--model-name', type=str, default='Rostlab/prot_bert', help='HUGGINGFACE Backbone model name card')
+    parser.add_argument('--finetune', action="store_true")
 
     #Molecule (Dataloader) related
     parser.add_argument('--load-data-directory', "-dird", default="/Scr/hyunpark/DL_Sequence_Collab/data", help='This is where data is located...')  
@@ -70,7 +72,6 @@ def get_args():
     parser.add_argument('--fillna-val', '-fv', type=int, default=100, help='Dataset ignore index')
     parser.add_argument('--train_frac', type=float, default=0.8, help='data split')
 
-
     args = parser.parse_args()
     return args
 
@@ -82,7 +83,7 @@ def _main():
     # ------------------------
     # 1 INIT LIGHTNING MODEL
     # ------------------------
-    model = Model.ProtBertClassifier(hparams)
+    model = Model.ProtBertClassifier(hparams) if not hparams.finetune else FModel.ProtBertClassifier(hparams).load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams, strict=False )
 
     # ------------------------
     # 2 INIT EARLY STOPPING
@@ -134,7 +135,14 @@ def _main():
     # ------------------------
     #tb_logger = pl.loggers.TensorBoardLogger("tb_logs", name="my_model")
 #     plugins = DDPPlugin(find_unused_parameters=False) if hparams.accelerator == "ddp" else None
-
+    
+    if hparams.load_model_checkpoint and not hparams.finetune:
+        resume_ckpt = os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint)
+    elif hparams.load_model_checkpoint and hparams.finetune:
+        resume_ckpt = None
+    else:
+        resume_ckpt = None
+    
     trainer = pl.Trainer(
         max_epochs=hparams.max_epochs,
         min_epochs=hparams.min_epochs,
@@ -151,7 +159,7 @@ def _main():
         strategy=hparams.strategy,
         accelerator=hparams.accelerator,
         auto_select_gpus=True,
-        resume_from_checkpoint=os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint) if hparams.load_model_checkpoint else None
+        resume_from_checkpoint=resume_ckpt
     )
 
     trainer.fit(model)
