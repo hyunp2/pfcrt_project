@@ -147,9 +147,9 @@ if __name__ == "__main__":
     
     valid_targets = (targets < hparams.fillna_val) #B,3
     print(valid_targets)
-    valid_targets0 = valid_targets[valid_targets[:,0]][0].to(targets) #only for targ0
-    valid_targets1 = valid_targets[valid_targets[:,1]][1].to(targets) #only for targ1
-    valid_targets2 = valid_targets[valid_targets[:,2]][2].to(targets) #only for targ2
+    valid_targets0 = valid_targets[valid_targets[:,0]][:,0].to(targets) #only for targ0
+    valid_targets1 = valid_targets[valid_targets[:,1]][:,1].to(targets) #only for targ1
+    valid_targets2 = valid_targets[valid_targets[:,2]][:,2].to(targets) #only for targ2
     print(valid_targets0, valid_targets1)
 
     weight0 = (1 / (torch.nn.functional.one_hot(valid_targets0).sum(dim=0) / valid_targets0.size(0) + torch.finfo(torch.float32).eps)).to(targets)
