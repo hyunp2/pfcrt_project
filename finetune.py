@@ -510,7 +510,7 @@ class ProtBertClassifier(ProtBertClassifier):
                                           truncation=True, return_tensors="pt",
                                           max_length=self.hparam.max_length) #Tokenize inputs as a dict type of Tensors
         targets = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
-        targets = torch.from_numpy(targets).view(len(targets), -1) #target is originally list -> change to Tensor (B,1)
+        targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
         
         dataset = dl.SequenceDataset(inputs, targets)
         train, val, test = torch.utils.data.random_split(dataset, self._get_split_sizes(self.hparam.train_frac, dataset),
