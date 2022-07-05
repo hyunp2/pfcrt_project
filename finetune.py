@@ -38,7 +38,7 @@ class ProtBertClassifier(ProtBertClassifier):
         super(ProtBertClassifier, self).__init__(hparam=hparam)
         parser = DataParser.get_data("pfcrt.csv")
         data = parser.data
-        data_trunc = parser.select_columns()
+        data_trunc = parser.select_columns(fill_na=100)
         self.dataset = data_trunc
         self.num_labels = 2 #; Filippo dataset
         # self.metric_acc = torchmetrics.Accuracy()
