@@ -470,8 +470,8 @@ class ProtBertClassifier(ProtBertClassifier):
         parameters = [
             {"params": self.head.parameters()},
             {"params": self.model.parameters()},
-            {"params": self.classifier0.parameters()}
-            {"params": self.classifier1.parameters()}
+            {"params": self.classifier0.parameters()},
+            {"params": self.classifier1.parameters()},
             {"params": self.classifier2.parameters()}
         ]
         if self.hparam.optimizer == "adafactor":
