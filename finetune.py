@@ -322,10 +322,10 @@ class ProtBertClassifier(ProtBertClassifier):
 
     def validation_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
         inputs, targets = batch
-        print(inputs, targets)
+#         print(inputs, targets)
         model_out = self.forward(**inputs)
         #print(model_out.size(), targets["labels"].size())
-        print(model_out)
+#         print(model_out)
         loss_val = self.loss(model_out, targets)
         
         y = targets["labels"].view(-1,3) #B3
