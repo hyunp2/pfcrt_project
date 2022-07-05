@@ -126,9 +126,9 @@ def _main():
     # 6 INIT MISC CALLBACK
     #  -------------------------------
     # MISC
-    progbar_callback = pl.callbacks.ProgressBar()
+#     progbar_callback = pl.callbacks.ProgressBar()
     timer_callback = pl.callbacks.Timer()
-    #tqdmbar_callback = pl.callbacks.TQDMProgressBar()
+    tqdmbar_callback = pl.callbacks.TQDMProgressBar()
 
     # ------------------------
     # N INIT TRAINER
@@ -155,7 +155,7 @@ def _main():
         logger=[csv_logger],
         max_epochs=hparams.max_epochs,
         min_epochs=hparams.min_epochs,
-        callbacks = [early_stop_callback, checkpoint_callback, swa_callback, progbar_callback, timer_callback],
+        callbacks = [early_stop_callback, checkpoint_callback, swa_callback, tqdmbar_callback, timer_callback],
         precision=hparams.precision,
         amp_backend=hparams.amp_backend,
         deterministic=False,
@@ -167,11 +167,10 @@ def _main():
         devices=hparams.ngpus,
         strategy=hparams.strategy,
         accelerator=hparams.accelerator,
-        auto_select_gpus=True,
-        resume_from_checkpoint=resume_ckpt
+        auto_select_gpus=True
     )
 
-    trainer.fit(model)
+    trainer.fit(model, ckpt_path=resume_ckpt) #New API!
 
 if __name__ == "__main__":
     _main()
