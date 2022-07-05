@@ -6,6 +6,7 @@ import attrs, dataclasses
 from typing import *
 import os, sys, shutil, subprocess, pathlib
 # from train import get_args
+import argparse
 import model as Model
 import finetune as FModel
 from transformers import BertTokenizer, BertModel, AutoModel, AutoTokenizer, BertConfig, BertForSequenceClassification, get_linear_schedule_with_warmup, Adafactor, AdamW
