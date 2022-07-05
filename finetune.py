@@ -276,6 +276,8 @@ class ProtBertClassifier(ProtBertClassifier):
     def training_epoch_end(self, outputs: list) -> dict:
         train_loss_mean = torch.stack([x['loss'] for x in outputs]).mean()
         self.log("epoch", self.current_epoch)
+        self.log("train_loss_mean", train_loss_mean, prog_bar=True)
+
         tqdm_dict = {"epoch_train_loss": train_loss_mean}
         wandb.log(tqdm_dict)
         
@@ -367,8 +369,8 @@ class ProtBertClassifier(ProtBertClassifier):
     def test_epoch_end(self, outputs: list) -> dict:
 
         test_loss_mean = torch.stack([x['test_loss'] for x in outputs]).mean()
+        self.log("test_loss_mean", test_loss_mean, prog_bar=True)
         tqdm_dict = {"epoch_test_loss": test_loss_mean}
-
         wandb.log(tqdm_dict)
         self.metric_acc0.reset()   
         self.metric_acc1.reset()   
