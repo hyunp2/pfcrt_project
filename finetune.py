@@ -488,7 +488,7 @@ class ProtBertClassifier(ProtBertClassifier):
         return [optimizer], [scheduler]
 
     @staticmethod
-    def _get_split_sizes(train_frac: float, full_dataset: Dataset) -> Tuple[int, int, int]:
+    def _get_split_sizes(train_frac: float, full_dataset: torch.utils.data.Dataset) -> Tuple[int, int, int]:
         """DONE: Need to change split schemes!"""
         len_full = len(full_dataset)
         len_train = int(len_full * train_frac)
