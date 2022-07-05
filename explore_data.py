@@ -61,7 +61,57 @@ if __name__ == "__main__":
     # 75%          0.250000       1.000000   1.000000
     # max          2.000000       2.000000   1.000000
     
+    def get_args():
+        parser = argparse.ArgumentParser(description='Training')
+
+        #Model related
+        parser.add_argument('--load-model-directory', "-dirm", type=str, default="/Scr/hyunpark/DL_Sequence_Collab/pfcrt_project/output", help='This is where model is/will be located...')  
+        parser.add_argument('--load-model-checkpoint', "-ckpt", type=str, default=None, help='which checkpoint...')  
+        parser.add_argument('--model-name', type=str, default='Rostlab/prot_bert', help='HUGGINGFACE Backbone model name card')
+        parser.add_argument('--finetune', action="store_true")
+
+        #Molecule (Dataloader) related
+        parser.add_argument('--load-data-directory', "-dird", default="/Scr/hyunpark/DL_Sequence_Collab/data", help='This is where data is located...')  
+        parser.add_argument('--dataset', type=str, default="yarongef/human_proteome_triplets", help='pass dataset...')  
+
+        #Optimizer related
+        parser.add_argument('--optimizer', default="adamw", type=str, help='optimizer')
+        parser.add_argument('--max-epochs', default=60, type=int, help='number of epochs max')
+        parser.add_argument('--min-epochs', default=1, type=int, help='number of epochs min')
+        parser.add_argument('--batch-size', '-b', default=2048, type=int, help='batch size')
+        parser.add_argument('--learning-rate', '-lr', default=1e-3, type=float, help='learning rate')
+        parser.add_argument('--ngpus', default="auto", help='Number of GPUs, -1 use all available. Use CUDA_VISIBLE_DEVICES=1, to decide gpus')
+        parser.add_argument('--num-nodes', type=int, default=1, help='Number of nodes')
+        parser.add_argument('--warm-up-split', type=int, default=5, help='warmup times')
+        parser.add_argument('--scheduler', type=str, default="cosine", help='scheduler type')
+        parser.add_argument('--accelerator', "-accl", type=str, default="gpu", help='accelerator type', choices=["cpu","gpu","tpu"])
+        parser.add_argument('--strategy', "-st", default="ddp", help='accelerator type', choices=["ddp_spawn","ddp","dp","ddp2","horovod","none"])
+
+        #Misc.
+        parser.add_argument('--seed', type=int, default=42, help='seeding number')
+        parser.add_argument('--precision', type=int, default=32, choices=[16, 32], help='Floating point precision')
+        parser.add_argument('--monitor', type=str, default="val_loss_mean", help='metric to watch')
+        parser.add_argument('--loss', '-l', type=str, default="classification", choices=['classification', 'contrastive', 'ner'], help='loss for training')
+        parser.add_argument('--save_top_k', type=int, default="5", help='num of models to save')
+        parser.add_argument('--patience', type=int, default=10, help='patience for stopping')
+        parser.add_argument('--metric_mode', type=str, default="min", help='mode of monitor')
+        parser.add_argument('--distributed-backend', default='ddp', help='Distributed backend: dp, ddp, ddp2')
+        parser.add_argument('--num-workers', type=int, default=4, help='Number of workers for data prefetch')
+        parser.add_argument('--amp-backend', type=str, default="native", help='Torch vs NVIDIA AMP')
+        parser.add_argument('--max_length', type=int, default=1536, help='length for padding seqs')
+        parser.add_argument('--label-smoothing', '-ls', type=float, default=0., help='CE loss regularization')
+        parser.add_argument('--sanity-checks', '-sc', type=int, default=2, help='Num sanity checks..')
+        parser.add_argument('--z_dim', '-zd', type=int, default=1024, help='CURL purpose.., SAME as self.encoder_features')
+        parser.add_argument('--ner', '-ner', type=bool, default=False, help='NER training')
+        parser.add_argument('--ner-config', '-nc', type=str, default=None, help='NER config')
+        parser.add_argument('--fillna-val', '-fv', type=int, default=100, help='Dataset ignore index')
+        parser.add_argument('--train_frac', type=float, default=0.8, help='data split')
+        parser.add_argument('--nonuniform-weight', type=bool, default=True, help='Focal loss')
+
+        args = parser.parse_args()
+        return args
     hparams = get_args()
+    
     pl.seed_everything(hparams.seed)
     # ------------------------
     # 1 INIT LIGHTNING MODEL
