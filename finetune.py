@@ -528,16 +528,13 @@ class ProtBertClassifier(ProtBertClassifier):
 
     def train_dataloader(self) -> DataLoader:
         """ Function that loads the train set. """
-        self._train_dataset = self.tokenizing(stage="train")
         return super().train_dataloader()
 
     def val_dataloader(self) -> DataLoader:
         """ Function that loads the validation set. """
-        self._dev_dataset = self.tokenizing(stage="val")
         return super().val_dataloader()
 
     def test_dataloader(self) -> DataLoader:
         """ Function that loads the validation set. """
-        self._test_dataset = self.tokenizing(stage="test")
         return super().test_dataloader()
 
