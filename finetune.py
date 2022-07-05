@@ -132,9 +132,9 @@ class ProtBertClassifier(ProtBertClassifier):
             targets = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
             targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
             valid_targets = (targets < self.hparam.fillna_val) #B,3
-            valid_targets0 = valid_targets[valid_targets[:,0],0] #only for targ0
-            valid_targets1 = valid_targets[valid_targets[:,1],1] #only for targ1
-            valid_targets2 = valid_targets[valid_targets[:,2],2] #only for targ2
+            valid_targets0 = valid_targets[valid_targets[:,0],0].long() #only for targ0
+            valid_targets1 = valid_targets[valid_targets[:,1],1].long() #only for targ1
+            valid_targets2 = valid_targets[valid_targets[:,2],2].long() #only for targ2
             self.weight0 = 1 / (torch.nn.functional.one_hot(valid_targets0).sum(dim=0) / valid_targets0.size(0) + torch.finfo(torch.float32).eps)
             self.weight1 = 1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)
             self.weight2 = 1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)
