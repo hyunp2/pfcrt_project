@@ -130,7 +130,7 @@ class ProtBertClassifier(ProtBertClassifier):
     def __build_weight(self, nonuniform_weight=True):
         if nonuniform_weight:
             targets = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
-            targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
+            targets = torch.from_numpy(targets).view(len(targets), -1).long().to(self.device) #target is originally list -> change to Tensor (B,1)
             valid_targets = (targets < self.hparam.fillna_val) #B,3
             valid_targets0 = valid_targets[valid_targets[:,0],0].to(targets) #only for targ0
             valid_targets1 = valid_targets[valid_targets[:,1],1].to(targets) #only for targ1
