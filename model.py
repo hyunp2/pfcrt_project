@@ -42,7 +42,7 @@ class ProtBertClassifier(pl.LightningModule):
 
     def __init__(self, hparam: argparse.ArgumentParser) -> None:
         super(ProtBertClassifier, self).__init__()
-        self.save_hyperparameters() #self.hparams to access all; no need to specify arguments when loading checkpoint???
+#         self.save_hyperparameters() #self.hparams to access all; no need to specify arguments when loading checkpoint???
         self.hparam = hparam
         self.ner_config = self.hparam.ner_config
         self.batch_size = self.hparam.batch_size
