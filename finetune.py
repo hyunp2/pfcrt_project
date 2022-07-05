@@ -486,6 +486,15 @@ class ProtBertClassifier(ProtBertClassifier):
 
         return [optimizer], [scheduler]
 
+    @staticmethod
+    def _get_split_sizes(train_frac: float, full_dataset: Dataset) -> Tuple[int, int, int]:
+        """DONE: Need to change split schemes!"""
+        len_full = len(full_dataset)
+        len_train = int(len_full * train_frac)
+        len_test = int(0.1 * len_full)
+        len_val = len_full - len_train - len_test
+        return len_train, len_val, len_test  
+    
     def tokenizing(self, stage="train"):
         x = []
         for i in range(len(self.dataset)):
@@ -501,6 +510,15 @@ class ProtBertClassifier(ProtBertClassifier):
         targets = torch.from_numpy(targets).view(len(targets), -1) #target is originally list -> change to Tensor (B,1)
         
         dataset = dl.SequenceDataset(inputs, targets)
+        train, val, test = torch.utils.data.random_split(dataset, self._get_split_sizes(0.8, dataset),
+                                                                generator=torch.Generator().manual_seed(0))
+        if stage == "train":
+            dataset = train
+        elif stage == "val":
+            dataset = val
+        elif stage == "test":
+            dataset = test
+            
         return dataset #torch Dataset
 
     def train_dataloader(self) -> DataLoader:
