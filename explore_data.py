@@ -143,7 +143,7 @@ if __name__ == "__main__":
                                       padding=True, truncation=True, return_tensors="pt",
                                       max_length=hparams.max_length) #Tokenize inputs as a dict type of Tensors
     targets = data_trunc.iloc[:,2:].values #list type including nans; (B,3)
-    targets = torch.from_numpy(targets).view(len(targets), -1) #target is originally list -> change to Tensor (B,1)
+    targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
     
     valid_targets = (targets < hparams.fillna_val) #B,3
     valid_targets0 = valid_targets[valid_targets[:,0],0].to(targets) #only for targ0
