@@ -121,6 +121,9 @@ class ProtBertClassifier(ProtBertClassifier):
             target0 = targets.get("labels", None)[:,0].to(logits0).long()
             target1 = targets.get("labels", None)[:,1].to(logits0).long()
             target2 = targets.get("labels", None)[:,2].to(logits0).long()
+            self.weight0 = self.weight0.to(logits0)
+            self.weight1 = self.weight1.to(logits0)
+            self.weight2 = self.weight2.to(logits0)
             loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight0)(logits0, target0) #ignore_index=100 is from dataset!
             loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight1)(logits1, target1) #ignore_index=100 is from dataset!
             loss2 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight2)(logits2, target2) #ignore_index=100 is from dataset!
