@@ -591,7 +591,10 @@ class ProtBertClassifier(ProtBertClassifier):
         len_val = len_full - len_train #- len_test
         return len_train, len_val #, len_test  
     
-    def __augment_data(self, train_data):
+    def __augment_data(self, tmp_dataloader):
+        inputs, targets = iter(tmp_dataloader).next()
+        self.make_hook()
+        
         model.forward(**train_data)
         ext = model.fhook["encoded_feats"]
         print(ext, ext.shape)
@@ -620,7 +623,13 @@ class ProtBertClassifier(ProtBertClassifier):
         dataset = dl.SequenceDataset(inputs, targets)
         train, val = torch.utils.data.random_split(dataset, self._get_split_sizes(self.hparam.train_frac, dataset),
                                                                 generator=torch.Generator().manual_seed(0))
-        tmp_dataloader = DataLoader(train)
+        tmp_dataloader = DataLoader(
+            dataset=train,
+            sampler=torch.utils.data.RandomSampler(train),
+            batch_size=len(train),
+            num_workers=self.hparam.num_workers,
+        )
+        
         
         if stage == "train":
             dataset = train
