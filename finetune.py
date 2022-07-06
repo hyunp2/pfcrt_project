@@ -42,6 +42,7 @@ class ProtBertClassifier(ProtBertClassifier):
         data = parser.data
         data_trunc = parser.select_columns(fill_na=self.hparam.fillna_val)
         self.dataset = data_trunc
+        print(data_trunc.shape)
         self.num_labels = 2 #; Filippo dataset
         # self.metric_acc = torchmetrics.Accuracy()
         self.z_dim = self.hparam.z_dim #Add this!
