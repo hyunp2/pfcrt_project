@@ -58,7 +58,7 @@ class ProtBertClassifier(ProtBertClassifier):
         _ = self.__build_loss() if not self.ner else self.__build_model_ner()
 
         self.freeze_encoder()
-        print(cf.on_yellow(f"CE-loss {self.haparm.use_ce}; Non-uniform weights {self.hparam.nonuniform_weight}"))
+        print(cf.on_yellow(f"CE-loss {self.hparam.use_ce}; Non-uniform weights {self.hparam.nonuniform_weight}"))
         print(cf.on_yellow(f"Non-uniform weights are {self.weight0} and {self.weight1} and {self.weight2}"))
 
 
