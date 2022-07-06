@@ -591,7 +591,10 @@ class ProtBertClassifier(ProtBertClassifier):
     def __augment_data_index(self, tmp_dataloader: DataLoader):
         inputs, targets = iter(tmp_dataloader).next()
         self.make_hook()
-        self.forward(**inputs) #Called only once after loading ckpt!
+        input_ids = inputs["input_ids"].to(self.device)
+        token_type_ids = inputs["token_type_ids"].to(self.device)
+        attention_mask = inputs["attention_mask"].to(self.device)
+        self.forward(input_ids=input_ids, token_type_ids=token_type_ids, attention_mask=attention_mask) #Called only once after loading ckpt!
         ext = inputs.fhook["encoded_feats"] #B,dim
         
         from imblearn.combine import SMOTEENN, SMOTETomek
