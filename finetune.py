@@ -35,7 +35,7 @@ import warnings
 logging.basicConfig()
 logger = logging.getLogger("BERT Fine-tuning")
 logger.setLevel(logging.DEBUG)
-# warnings.simplefilter("ignore")
+warnings.simplefilter("ignore")
 
 class ProtBertClassifier(ProtBertClassifier):
     def __init__(self, hparam: argparse.ArgumentParser) -> None:
