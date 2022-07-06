@@ -159,7 +159,7 @@ if __name__ == "__main__":
     from imblearn.combine import SMOTEENN
     smote_enn = SMOTEENN(random_state=0)
     X = proper_inputs
-    y = targets.detach().cpu().numpy()
+    y = valid_targets0.detach().cpu().numpy()
     X_resampled, y_resampled = smote_enn.fit_resample(X, y)
     print(X, X_resampled)
 
