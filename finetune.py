@@ -151,7 +151,7 @@ class ProtBertClassifier(ProtBertClassifier):
             valid_targets0 = targets[valid_targets[:,0]][:,0].to(targets) #only for targ0
             valid_targets1 = targets[valid_targets[:,1]][:,1].to(targets) #only for targ1
             valid_targets2 = targets[valid_targets[:,2]][:,2].to(targets) #only for targ2
-            print(cf.red("0: {valid_targets0.size()}, 1: {valid_targets1.size()}, 2: {valid_targets2.size()}" ))
+            print(cf.red(f"0: {valid_targets0.size()}, 1: {valid_targets1.size()}, 2: {valid_targets2.size()}" ))
             self.weight0 = (1 / (torch.nn.functional.one_hot(valid_targets0).sum(dim=0) / valid_targets0.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
             self.weight1 = (1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
             self.weight2 = (1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
