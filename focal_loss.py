@@ -31,7 +31,7 @@ class FocalLoss(nn.Module):
 #         mask = (target < self.threshold).view(-1)
 #         target = target[mask] #b,1
         
-        logpt = F.log_softmax(input)
+        logpt = F.log_softmax(input, dim=-1)
         logpt = logpt.gather(1,target)
         logpt = logpt.view(-1)
         pt = logpt.data.exp() #non-diff
