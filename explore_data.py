@@ -174,6 +174,9 @@ if __name__ == "__main__":
 #     print(model.loss(out, targets_))
     
     model.make_hook()
+    dll = torch.utils.data.DataLoader(dataset, shuffle=False, batch_size=len(dataset))
+    inputs_, targets_ = batch
+    model.forward(**inputs_)
     ext = model.fhook["encoded_feats"]
     print(ext, ext.shape)
 #     trainer.predict(model, dataloaders=custom_dataloader)
