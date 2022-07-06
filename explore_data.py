@@ -51,7 +51,7 @@ if __name__ == "__main__":
 #     data_trunc = parser.select_columns()
 #     print(data_trunc)
     data_trunc = parser.select_columns(fill_na=100) #arbitrary ignore val
-    print(data_trunc)
+#     print(data_trunc)
 
     # data_trunc.describe()
     #        PPQ Resistance  CQ Resistance    Fitness
