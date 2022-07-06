@@ -58,6 +58,7 @@ class ProtBertClassifier(ProtBertClassifier):
         _ = self.__build_loss() if not self.ner else self.__build_model_ner()
 
         self.freeze_encoder()
+        
         print(cf.on_yellow(f"CE-loss {self.hparam.use_ce}; Non-uniform weights {self.hparam.nonuniform_weight}"))
         print(cf.on_yellow(f"Non-uniform weights are {self.weight0} and {self.weight1} and {self.weight2}"))
 
@@ -125,10 +126,10 @@ class ProtBertClassifier(ProtBertClassifier):
             target0 = targets.get("labels", None)[:,0].to(logits0).long()
             target1 = targets.get("labels", None)[:,1].to(logits0).long()
             target2 = targets.get("labels", None)[:,2].to(logits0).long()
-            self.weight0 = torch.nn.functional.normalize(self.weight0.to(logits0), dim=-1) if self.hparam.nonuniform_weight else None
-            self.weight1 = torch.nn.functional.normalize(self.weight1.to(logits0), dim=-1) if self.hparam.nonuniform_weight else None
-            self.weight2 = torch.nn.functional.normalize(self.weight2.to(logits0), dim=-1) if self.hparam.nonuniform_weight else None
-            
+            self.weights0 = self.weights0.to(logits0) if self.hparam.nonuniform_weight else None
+            self.weights1 = self.weights1.to(logits0) if self.hparam.nonuniform_weight else None
+            self.weights2 = self.weights2.to(logits0) if self.hparam.nonuniform_weight else None
+
             if self.hparam.use_ce:
                 loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight0)(logits0, target0) #ignore_index=100 is from dataset!
                 loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight1)(logits1, target1) #ignore_index=100 is from dataset!
@@ -156,6 +157,10 @@ class ProtBertClassifier(ProtBertClassifier):
             self.weight0 = None
             self.weight1 = None
             self.weight2 = None
+            
+        self.weight0 = torch.nn.functional.normalize(self.weight0, dim=-1) if self.hparam.nonuniform_weight else None
+        self.weight1 = torch.nn.functional.normalize(self.weight1, dim=-1) if self.hparam.nonuniform_weight else None
+        self.weight2 = torch.nn.functional.normalize(self.weight2, dim=-1) if self.hparam.nonuniform_weight else None
         
     def compute_logits_CURL(self, z_a, z_pos):
         """
@@ -524,7 +529,7 @@ class ProtBertClassifier(ProtBertClassifier):
         #https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#:~:text=is%20shown%20below.-,lr_scheduler_config,-%3D%20%7B%0A%20%20%20%20%23%20REQUIRED
         scheduler = {"scheduler": scheduler, "interval": "step", "frequency": 1, "monitor": "val_loss"} #Every step/epoch with Frequency 1etc by monitoring val_loss if needed
 
-        return [optimizer], [scheduler]
+        return ([optimizer], [scheduler])
 
     @staticmethod
     def _get_split_sizes(train_frac: float, full_dataset: torch.utils.data.Dataset) -> Tuple[int, int, int]:
