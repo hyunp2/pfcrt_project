@@ -107,7 +107,8 @@ if __name__ == "__main__":
         parser.add_argument('--ner-config', '-nc', type=str, default=None, help='NER config')
         parser.add_argument('--fillna-val', '-fv', type=int, default=100, help='Dataset ignore index')
         parser.add_argument('--train_frac', type=float, default=0.8, help='data split')
-        parser.add_argument('--nonuniform-weight', type=bool, default=True, help='Focal loss')
+        parser.add_argument('--nonuniform_weight', action="store_true", help='Weighted CE loss')
+        parser.add_argument('--use_ce', action="store_true", help='CE vs Focal loss')
 
         args = parser.parse_args()
         return args
