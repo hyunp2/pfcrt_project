@@ -149,7 +149,7 @@ if __name__ == "__main__":
     targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
     
     valid_targets = (targets < hparams.fillna_val) #B,3
-    print(valid_targets.any(dim=-1), targets, targets.size())
+#     print(valid_targets.any(dim=-1), targets, targets.size())
     
     valid_targets0 = targets[valid_targets[:,0]][:,0].to(targets) #only for targ0
     valid_targets1 = targets[valid_targets[:,1]][:,1].to(targets) #only for targ1
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     weight0 = (1 / (torch.nn.functional.one_hot(valid_targets0).sum(dim=0) / valid_targets0.size(0) + torch.finfo(torch.float32).eps)).to(targets)
     weight1 = (1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)).to(targets)
     weight2 = (1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)).to(targets)
-#     print(weight0, weight1, weight2)
+    print(weight0, weight1, weight2)
     
     dataset = ds.SequenceDataset(inputs=inputs, targets=targets)
     custom_dataloader = torch.utils.data.DataLoader(dataset, shuffle=True, batch_size=hparams.batch_size)
