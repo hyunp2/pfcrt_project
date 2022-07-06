@@ -136,9 +136,9 @@ class ProtBertClassifier(ProtBertClassifier):
                 loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight1)(logits1, target1) #ignore_index=100 is from dataset!
                 loss2 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight2)(logits2, target2) #ignore_index=100 is from dataset!
             else:
-                loss0 = FocalLoss()(logits0, target0) #ignore_index=100 is from dataset!
-                loss1 = FocalLoss()(logits1, target1) #ignore_index=100 is from dataset!
-                loss2 = FocalLoss()(logits2, target2) #ignore_index=100 is from dataset!
+                loss0 = FocalLoss(beta=0.9999, weight=self.weight0)(logits0, target0) #ignore_index=100 is from dataset!
+                loss1 = FocalLoss(beta=0.9999, weight=self.weight1)(logits1, target1) #ignore_index=100 is from dataset!
+                loss2 = FocalLoss(beta=0.9999, weight=self.weight2)(logits2, target2) #ignore_index=100 is from dataset!
             return (loss0 + loss1 + loss2).mean()
         
         self._loss = loss_fn
