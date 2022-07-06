@@ -72,7 +72,7 @@ def get_args():
     parser.add_argument('--fillna-val', '-fv', type=int, default=100, help='Dataset ignore index')
     parser.add_argument('--train_frac', type=float, default=0.8, help='data split')
     parser.add_argument('--nonuniform_weight', action="store_true", help='Weighted CE loss')
-    parser.add_argument('--use-ce', action="store_true", help='CE vs Focal loss')
+    parser.add_argument('--use_ce', action="store_true", help='CE vs Focal loss')
 
     args = parser.parse_args()
     return args
@@ -180,3 +180,5 @@ if __name__ == "__main__":
     #python -m train --ngpus "auto" --accelerator gpu --strategy ddp -b 512 
     #CUDA_VISIBLE_DEVICES=0 python -m train -ls 0.1 -b 8 --ngpus "auto" --accelerator gpu --strategy none --finetune -ckpt ckpt_for_finetune.ckpt
     #python -m train --ngpus "auto" --accelerator gpu --strategy ddp -b 512 
+    
+#     python -m train --ngpus "auto" --accelerator gpu --strategy none -b 8 --finetune -ckpt ckpt_for_finetune.ckpt --use_ce --nonuniform_weight
