@@ -116,7 +116,7 @@ class ProtBertClassifier(pl.LightningModule):
         self.fhook = dict()
         def hook(m, i, o):
             self.fhook["encoded_feats"] = o #(B,1024)
-        self.fhook_handle = self.head[1].register_forward_hook(hook) #Call Forward hook with "model.fhook["encoded_feats"]" of (B,C); for NER, it is (B,L,C)
+        self.fhook_handle = self.head[0].register_forward_hook(hook) #Call Forward hook with "model.fhook["encoded_feats"]" of (B,C); for NER, it is (B,L,C)
  
     def __build_loss(self):
         """ Initializes the loss function/s. """
