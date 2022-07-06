@@ -158,7 +158,7 @@ class ProtBertClassifier(ProtBertClassifier):
         else:
             self.weight0 = targets.new_ones(3)
             self.weight1 = targets.new_ones(3)
-            self.weight2 = targets.new_ones(3)
+            self.weight2 = targets.new_ones(2)
             
 #         self.weight0 = torch.nn.functional.normalize(self.weight0, dim=-1) if self.hparam.nonuniform_weight else None
 #         self.weight1 = torch.nn.functional.normalize(self.weight1, dim=-1) if self.hparam.nonuniform_weight else None
