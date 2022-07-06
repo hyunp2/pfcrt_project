@@ -66,8 +66,8 @@ class ProtBertClassifier(ProtBertClassifier):
         
         print(cf.on_yellow(f"CE-loss {self.hparam.use_ce}; Non-uniform weights {self.hparam.nonuniform_weight}"))
         print(cf.on_yellow(f"Non-uniform weights are {self.weight0} and {self.weight1} and {self.weight2}"))
+        print(cf.on_yellow(f"Data augmentation is applied {self.hparam.aug}..."))
 
-        
     def __build_model(self) -> None:
         """ Init BERT model + tokenizer + classification head."""
         #model = locals()["model"] if locals()["model"] and isinstance(locals()["model"], BertModel) else BertModel.from_pretrained(self.model_name, cache_dir=self.hparam.load_model_directory)
@@ -595,7 +595,7 @@ class ProtBertClassifier(ProtBertClassifier):
         token_type_ids = inputs["token_type_ids"].to(self.device)
         attention_mask = inputs["attention_mask"].to(self.device)
         out = self.forward(input_ids=input_ids, token_type_ids=token_type_ids, attention_mask=attention_mask) #Called only once after loading ckpt!
-        print(self.fhook)
+#         print(self.fhook)
         ext = self.fhook["encoded_feats"] #B,dim
         
         from imblearn.combine import SMOTEENN, SMOTETomek
@@ -633,19 +633,20 @@ class ProtBertClassifier(ProtBertClassifier):
         dataset = dl.SequenceDataset(inputs, targets)
         train, val = torch.utils.data.random_split(dataset, self._get_split_sizes(self.hparam.train_frac, dataset),
                                                                 generator=torch.Generator().manual_seed(0))
-        tmp_dataloader = DataLoader(
-            dataset=train,
-            shuffle=None,
-            batch_size=len(train),
-            num_workers=self.hparam.num_workers,
-        )
-        os_indices = self.__augment_data_index(tmp_dataloader)
-        print(cf.on_yellow(f"Original Train data size is {len(train)}, and augmented to {os_indices.shape[0]}"))
-        aug_train = self.__augment_data(tmp_dataloader, os_indices)
-#         print(aug_train)
+        if self.hparam.aug:
+            tmp_dataloader = DataLoader(
+                dataset=train,
+                shuffle=None,
+                batch_size=len(train),
+                num_workers=self.hparam.num_workers,
+            )
+            os_indices = self.__augment_data_index(tmp_dataloader)
+            print(cf.on_yellow(f"Original Train data size is {len(train)}, and augmented to {os_indices.shape[0]}"))
+            train = self.__augment_data(tmp_dataloader, os_indices)
+    #         print(aug_train)
         
         if stage == "train":
-            dataset = aug_train
+            dataset = train
         elif stage == "val":
             dataset = val
 #         elif stage == "test":
