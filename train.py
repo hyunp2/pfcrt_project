@@ -73,6 +73,8 @@ def get_args():
     parser.add_argument('--train_frac', type=float, default=0.8, help='data split')
     parser.add_argument('--nonuniform_weight', action="store_true", help='Weighted CE loss')
     parser.add_argument('--use_ce', action="store_true", help='CE vs Focal loss')
+    parser.add_argument('--basis', type=int, default=0, choices=[0,1,2], help='Which target to use')
+    parser.add_argument('--aug', action="store_true", help='Use data augmentation')
 
     args = parser.parse_args()
     return args
