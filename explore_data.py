@@ -191,6 +191,6 @@ if __name__ == "__main__":
     y = targets_["labels"][:,0].detach().cpu().numpy()
     print(X.shape, y.shape)
     X_resampled, y_resampled = smote_enn.fit_resample(X, y)
-    print(X, X_resampled)
+    print(X.shape, X_resampled.shape)
 
 
