@@ -594,7 +594,8 @@ class ProtBertClassifier(ProtBertClassifier):
         input_ids = inputs["input_ids"].to(self.device)
         token_type_ids = inputs["token_type_ids"].to(self.device)
         attention_mask = inputs["attention_mask"].to(self.device)
-        self.forward(input_ids=input_ids, token_type_ids=token_type_ids, attention_mask=attention_mask) #Called only once after loading ckpt!
+        out = self.forward(input_ids=input_ids, token_type_ids=token_type_ids, attention_mask=attention_mask) #Called only once after loading ckpt!
+        print(out)
         ext = self.fhook["encoded_feats"] #B,dim
         
         from imblearn.combine import SMOTEENN, SMOTETomek
