@@ -611,9 +611,8 @@ class ProtBertClassifier(ProtBertClassifier):
         inputs["input_ids"] = inputs["input_ids"][os_indices]
         inputs["token_type_ids"] = inputs["token_type_ids"][os_indices]
         inputs["attention_mask"] = inputs["attention_mask"][os_indices]
-        targets["labels"] = targets["labels"][os_indices]
+        targets = targets["labels"][os_indices] #Should be a Tensor
         aug_dataset = dl.SequenceDataset(inputs, targets)
-        print("HEEEEEEEREEEEEE!")
         return aug_dataset
     
     def tokenizing(self, stage="train"):
@@ -640,7 +639,9 @@ class ProtBertClassifier(ProtBertClassifier):
             num_workers=self.hparam.num_workers,
         )
         os_indices = self.__augment_data_index(tmp_dataloader)
+        print(f"Original Train data size is {len(train)}, and augmented to {os_indices.shape[0]}")
         aug_train = self.__augment_data(tmp_dataloader, os_indices)
+#         print(aug_train)
         
         if stage == "train":
             dataset = aug_train
