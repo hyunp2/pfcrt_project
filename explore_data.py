@@ -189,8 +189,9 @@ if __name__ == "__main__":
     smote_enn = RandomOverSampler(random_state=0)
     X = ext.detach().cpu().numpy() #B,dim
     y = targets_["labels"][:,0].detach().cpu().numpy()
-    print(X.shape, y.shape)
+#     print(X.shape, y.shape)
     X_resampled, y_resampled = smote_enn.fit_resample(X, y)
-    print(X.shape, X_resampled.shape)
+#     print(X.shape, X_resampled.shape)
+    print(smote_enn.sample_indices_)
 
 
