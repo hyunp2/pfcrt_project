@@ -306,7 +306,10 @@ class ProtBertClassifier(ProtBertClassifier):
         train_acc0 = balanced_accuracy_score(labels_hat0.detach().cpu().numpy().reshape(-1), y0.detach().cpu().numpy().reshape(-1))
         train_acc1 = balanced_accuracy_score(labels_hat1.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1))
         train_acc2 = balanced_accuracy_score(labels_hat2.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1))
-    
+        print(labels_hat0.detach().cpu().numpy().reshape(-1), y0.detach().cpu().numpy().reshape(-1))
+        print(labels_hat1.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1))
+        print(labels_hat2.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1))
+
         output = {"train_loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2} #NEVER USE ORDEREDDICT!!!!
         wandb.log(output)
 #         self.log("train_loss", loss_train, prog_bar=True)
