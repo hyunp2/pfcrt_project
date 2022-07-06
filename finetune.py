@@ -666,3 +666,5 @@ class ProtBertClassifier(ProtBertClassifier):
 #         """ Function that loads the validation set. """
 #         return super().test_dataloader()
 
+
+# python -m train --ngpus "auto" --accelerator gpu --strategy none -b 8 --finetune -ckpt ckpt_for_finetune.ckpt --patience 100 --train_frac 0.8 --use_ce --aug
