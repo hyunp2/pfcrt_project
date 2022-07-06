@@ -593,6 +593,12 @@ class ProtBertClassifier(ProtBertClassifier):
     
     def __augment_data(self, train_data):
         
+        from imblearn.combine import SMOTEENN, SMOTETomek
+        from imblearn.over_sampling import RandomOverSampler
+        smote_enn = RandomOverSampler(random_state=0)
+        X = ext.detach().cpu().numpy() #B,dim
+        y = targets_["labels"][:,0].detach().cpu().numpy()
+        X_resampled, y_resampled = smote_enn.fit_resample(X, y)
         
     def tokenizing(self, stage="train"):
         x = []
