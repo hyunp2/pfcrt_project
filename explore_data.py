@@ -123,8 +123,8 @@ if __name__ == "__main__":
     hparams.load_model_checkpoint = "epoch=53-train_loss_mean=0.00-val_loss_mean=0.19.ckpt" #"epoch=16-train_loss_mean=0.00-val_loss_mean=0.32.ckpt"
     hparams.batch_size = 4
     
-#     model = Model.ProtBertClassifier.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams )
-    model = FModel.ProtBertClassifier.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams, strict=False )
+    model = Model.ProtBertClassifier.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams )
+#     model = FModel.ProtBertClassifier.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams, strict=False )
 
 #     trainer = pl.Trainer(
 #         strategy=hparams.strategy,
