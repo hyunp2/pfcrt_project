@@ -303,12 +303,14 @@ class ProtBertClassifier(ProtBertClassifier):
 #         train_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 #         train_acc1 = self.metric_acc1(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 #         train_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-        train_acc0 = balanced_accuracy_score(labels_hat0.detach().cpu().numpy().reshape(-1), y0.detach().cpu().numpy().reshape(-1))
-        train_acc1 = balanced_accuracy_score(labels_hat1.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1))
-        train_acc2 = balanced_accuracy_score(labels_hat2.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1))
-        print(labels_hat0.detach().cpu().numpy().reshape(-1), y0.detach().cpu().numpy().reshape(-1))
-        print(labels_hat1.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1))
-        print(labels_hat2.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1))
+        train_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
+        train_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
+        train_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
+#         print(labels_hat0.detach().cpu().numpy().reshape(-1), y0.detach().cpu().numpy().reshape(-1))
+#         print(labels_hat1.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1))
+#         print(labels_hat2.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1))
+        predY = np.stack([labels_hat0.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1)]).t() #data,3
+        dataY = np.stack([y0.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1)]).t() #data,3
 
         output = {"train_loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2} #NEVER USE ORDEREDDICT!!!!
         wandb.log(output)
@@ -317,14 +319,23 @@ class ProtBertClassifier(ProtBertClassifier):
 #         self.log("train_acc1", train_acc1, prog_bar=True)
 #         self.log("train_acc2", train_acc2, prog_bar=True)
 
-        return {"loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2}
+        return {"loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2, "predY": predY, "dataY": dataY}
 
     def training_epoch_end(self, outputs: list) -> dict:
         train_loss_mean = torch.stack([x['loss'] for x in outputs]).mean()
+        train_predY = np.concatenate([x['predY'] for x in outputs], axis=0)
+        train_dataY = np.concatenate([x['dataY'] for x in outputs], axis=0)
+        predy0, predy1, predy2 = train_predY[:,0], train_predY[:,1], train_predY[:,2]
+        datay0, datay1, datay2 = train_dataY[:,0], train_dataY[:,1], train_dataY[:,2]
+
+        train_acc0 = balanced_accuracy_score(datay0, predy0)
+        train_acc1 = balanced_accuracy_score(datay1, predy1)
+        train_acc2 = balanced_accuracy_score(datay2, predy2)
+        
         self.log("epoch", self.current_epoch)
         self.log("train_loss_mean", train_loss_mean, prog_bar=True)
 
-        tqdm_dict = {"epoch_train_loss": train_loss_mean}
+        tqdm_dict = {"epoch_train_loss": train_loss_mean, "epoch_acc0": train_acc0, "epoch_acc1": train_acc1, "epoch_acc2": train_acc2}
         wandb.log(tqdm_dict)
         
         self.metric_acc0.reset()   
@@ -358,25 +369,35 @@ class ProtBertClassifier(ProtBertClassifier):
 #         val_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 #         val_acc1 = self.metric_acc1(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 #         val_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-        val_acc0 = balanced_accuracy_score(labels_hat0.detach().cpu().numpy().reshape(-1), y0.detach().cpu().numpy().reshape(-1))
-        val_acc1 = balanced_accuracy_score(labels_hat1.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1))
-        val_acc2 = balanced_accuracy_score(labels_hat2.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1))
-        
+        val_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
+        val_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
+        val_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
+        predY = np.stack([labels_hat0.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1)]).t() #data,3
+        dataY = np.stack([y0.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1)]).t() #data,3
+
         output = {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2} #NEVER USE ORDEREDDICT!!!!
         self.log("val_loss", loss_val, prog_bar=True)
 
         wandb.log(output)
 
-        return output
+        return {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2, "predY": predY, "dataY": dataY} #NEVER USE ORDEREDDICT!!!!
+
         
     def validation_epoch_end(self, outputs: list) -> dict:
         if not self.trainer.sanity_checking:
             val_loss_mean = torch.stack([x['val_loss'] for x in outputs]).mean()
-
+            val_predY = np.concatenate([x['predY'] for x in outputs], axis=0)
+            val_dataY = np.concatenate([x['dataY'] for x in outputs], axis=0)
+            predy0, predy1, predy2 = val_predY[:,0], val_predY[:,1], val_predY[:,2]
+            datay0, datay1, datay2 = val_dataY[:,0], val_dataY[:,1], val_dataY[:,2]
+            val_acc0 = balanced_accuracy_score(datay0, predy0)
+            val_acc1 = balanced_accuracy_score(datay1, predy1)
+            val_acc2 = balanced_accuracy_score(datay2, predy2)
+            
             self.log("val_loss_mean", val_loss_mean, prog_bar=True)
             self.log("epoch", self.current_epoch, prog_bar=True)
 
-            tqdm_dict = {"epoch_val_loss": val_loss_mean}
+            tqdm_dict = {"epoch_val_loss": val_loss_mean, "epoch_acc0": val_acc0, "epoch_acc1": val_acc1, "epoch_acc2": val_acc2}
 
             wandb.log(tqdm_dict)
             self.metric_acc0.reset()   
@@ -409,22 +430,33 @@ class ProtBertClassifier(ProtBertClassifier):
 #         test_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 #         test_acc1 = self.metric_acc1(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 #         test_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-        test_acc0 = balanced_accuracy_score(labels_hat0.detach().cpu().numpy().reshape(-1), y0.detach().cpu().numpy().reshape(-1))
-        test_acc1 = balanced_accuracy_score(labels_hat1.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1))
-        test_acc2 = balanced_accuracy_score(labels_hat2.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1))
-        
+        test_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
+        test_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
+        test_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
+        predY = np.stack([labels_hat0.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1)]).t() #data,3
+        dataY = np.stack([y0.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1)]).t() #data,3
+
         output = {"test_loss": loss_test, "test_acc0": test_acc0, "test_acc1": test_acc1, "test_acc2": test_acc2} #NEVER USE ORDEREDDICT!!!!
 #         self.log("test_loss", loss_test, prog_bar=True)
 
         wandb.log(output)
         
-        return output
+        return {"test_loss": loss_test, "test_acc0": test_acc0, "test_acc1": test_acc1, "test_acc2": test_acc2, "predY": predY, "dataY": dataY}
 
     def test_epoch_end(self, outputs: list) -> dict:
 
         test_loss_mean = torch.stack([x['test_loss'] for x in outputs]).mean()
+        test_predY = np.concatenate([x['predY'] for x in outputs], axis=0)
+        test_dataY = np.concatenate([x['dataY'] for x in outputs], axis=0)
+        predy0, predy1, predy2 = test_predY[:,0], test_predY[:,1], test_predY[:,2]
+        datay0, datay1, datay2 = test_dataY[:,0], test_dataY[:,1], test_dataY[:,2]
+        test_acc0 = balanced_accuracy_score(datay0, predy0)
+        test_acc1 = balanced_accuracy_score(datay1, predy1)
+        test_acc2 = balanced_accuracy_score(datay2, predy2)
+        
         self.log("test_loss_mean", test_loss_mean, prog_bar=True)
-        tqdm_dict = {"epoch_test_loss": test_loss_mean}
+        tqdm_dict = {"epoch_test_loss": test_loss_mean, "epoch_acc0": test_acc0, "epoch_acc1": test_acc1, "epoch_acc2": test_acc2}
+        
         wandb.log(tqdm_dict)
         self.metric_acc0.reset()   
         self.metric_acc1.reset()   
