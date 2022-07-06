@@ -525,11 +525,11 @@ class ProtBertClassifier(ProtBertClassifier):
             num_warmup_steps=warmup_steps,
             num_training_steps=total_training_steps,
         )
-        optimizer = {"optimizer": optimizer, "frequency": 1}
+#         optimizer = {"optimizer": optimizer, "frequency": 1}
         #https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#:~:text=is%20shown%20below.-,lr_scheduler_config,-%3D%20%7B%0A%20%20%20%20%23%20REQUIRED
-        scheduler = {"scheduler": scheduler, "interval": "step", "frequency": 1, "monitor": "val_loss"} #Every step/epoch with Frequency 1etc by monitoring val_loss if needed
+        scheduler = {"scheduler": scheduler, "interval": "step", "frequency": 1} #Every step/epoch with Frequency 1etc by monitoring val_loss if needed
 
-        return ([optimizer], [scheduler])
+        return [optimizer], [scheduler]
 
     @staticmethod
     def _get_split_sizes(train_frac: float, full_dataset: torch.utils.data.Dataset) -> Tuple[int, int, int]:
