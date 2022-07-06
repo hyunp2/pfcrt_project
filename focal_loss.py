@@ -26,12 +26,12 @@ class FocalLoss(nn.Module):
             input = input #B,dim
         target = target.view(-1,1) #B,1
         mask = (target < self.threshold).view(-1)
-        target = target[mask] #b,1
+#         target = target[mask] #b,1
         
-        logpt = F.log_softmax(input[mask])
+        logpt = F.log_softmax(input)
         logpt = logpt.gather(1,target)
         logpt = logpt.view(-1)
-        pt = logpt.data.exp().data #non-diff
+        pt = logpt.data.exp() #non-diff
 
         if self.alpha is not None:
             if self.alpha.type()!=input.data.type():
@@ -40,5 +40,6 @@ class FocalLoss(nn.Module):
             logpt = logpt * Variable(at)
 
         loss = -1 * (1-pt)**self.gamma * logpt
+        loss = loss[mask] if mask.any() else 0. #b,
         if self.size_average: return loss.mean()
         else: return loss.sum()
