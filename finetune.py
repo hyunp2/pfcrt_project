@@ -606,6 +606,7 @@ class ProtBertClassifier(ProtBertClassifier):
         X_resampled, y_resampled = smote_enn.fit_resample(X, y)
         return smote_enn.sample_indices_ #(OverN,)
     
+    @staticmethd
     def __augment_data(self, tmp_dataloader: DataLoader, os_indices: np.ndarray):
         inputs, targets = iter(tmp_dataloader).next() #Dict, Dict
         inputs["input_ids"] = inputs["input_ids"][os_indices]
@@ -639,7 +640,7 @@ class ProtBertClassifier(ProtBertClassifier):
             num_workers=self.hparam.num_workers,
         )
         os_indices = self.__augment_data_index(tmp_dataloader)
-        print(f"Original Train data size is {len(train)}, and augmented to {os_indices.shape[0]}")
+        print(cf.on_yellow(f"Original Train data size is {len(train)}, and augmented to {os_indices.shape[0]}"))
         aug_train = self.__augment_data(tmp_dataloader, os_indices)
 #         print(aug_train)
         
