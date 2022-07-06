@@ -32,14 +32,16 @@ class DataParser(object):
         return data
     
     def select_columns(self, col_names: List[str]=["PfCRT Isoform", "Amino Acid Sequence", 
-                                                               "PPQ Resistance", "CQ Resistance", "Fitness"], drop_duplicate_on="Amino Acid Sequence", fill_na=None):
+                                                               "PPQ Resistance", "CQ Resistance", "Fitness"], drop_duplicate_on="Amino Acid Sequence", fill_na=None, dropna=True):
         if drop_duplicate_on == None:
             data = self.data.loc[:,col_names]
-            data.fillna(value=fill_na, inplace=True)
+            data.dropna(axis=0, inplace=dropna)
+#             data.fillna(value=fill_na, inplace=True)
             return data
         elif drop_duplicate_on != None:
             data = self.data.loc[:,col_names].drop_duplicates(drop_duplicate_on)
-            data.fillna(value=fill_na, inplace=True)
+            data.dropna(axis=0, inplace=dropna)
+#             data.fillna(value=fill_na, inplace=True) 
             return data
         
     
@@ -146,8 +148,8 @@ if __name__ == "__main__":
     targets = data_trunc.iloc[:,2:].values #list type including nans; (B,3)
     targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
     
-    valid_targets = (targets > hparams.fillna_val) #B,3
-    print(valid_targets.any(dim=-1))
+    valid_targets = (targets < hparams.fillna_val) #B,3
+    print(valid_targets.any(dim=-1), targets, targets.size())
     
     valid_targets0 = targets[valid_targets[:,0]][:,0].to(targets) #only for targ0
     valid_targets1 = targets[valid_targets[:,1]][:,1].to(targets) #only for targ1
