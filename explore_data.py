@@ -184,8 +184,8 @@ if __name__ == "__main__":
 #     python -m explore_data --ngpus 1 --accelerator gpu --strategy ddp --load-model-checkpoint epoch=16-train_loss_mean=0.00-val_loss_mean=0.32.ckpt -b 4
 
     
-    from imblearn.combine import SMOTEENN
-    smote_enn = SMOTEENN(random_state=0)
+    from imblearn.combine import SMOTEENN, SMOTETomek
+    smote_enn = SMOTETomek(random_state=0)
     X = ext.detach().cpu().numpy() #B,dim
     y = targets_["labels"][:,0].detach().cpu().numpy()
     print(X.shape, y.shape)
