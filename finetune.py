@@ -299,10 +299,10 @@ class ProtBertClassifier(ProtBertClassifier):
 
         output = {"train_loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2} #NEVER USE ORDEREDDICT!!!!
         wandb.log(output)
-        self.log("train_loss", loss_train, prog_bar=True)
-        self.log("train_acc0", train_acc0, prog_bar=True)
-        self.log("train_acc1", train_acc1, prog_bar=True)
-        self.log("train_acc2", train_acc2, prog_bar=True)
+#         self.log("train_loss", loss_train, prog_bar=True)
+#         self.log("train_acc0", train_acc0, prog_bar=True)
+#         self.log("train_acc1", train_acc1, prog_bar=True)
+#         self.log("train_acc2", train_acc2, prog_bar=True)
 
         return {"loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2}
 
@@ -347,7 +347,7 @@ class ProtBertClassifier(ProtBertClassifier):
         val_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 
         output = {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2} #NEVER USE ORDEREDDICT!!!!
-        self.log("val_loss", loss_val, prog_bar=True)
+#         self.log("val_loss", loss_val, prog_bar=True)
 
         wandb.log(output)
 
@@ -395,7 +395,7 @@ class ProtBertClassifier(ProtBertClassifier):
         test_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 
         output = {"test_loss": loss_test, "test_acc0": test_acc0, "test_acc1": test_acc1, "test_acc2": test_acc2} #NEVER USE ORDEREDDICT!!!!
-        self.log("test_loss", loss_test, prog_bar=True)
+#         self.log("test_loss", loss_test, prog_bar=True)
 
         wandb.log(output)
         
