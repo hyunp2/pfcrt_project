@@ -303,9 +303,9 @@ class ProtBertClassifier(ProtBertClassifier):
 #         train_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 #         train_acc1 = self.metric_acc1(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 #         train_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-        train_acc0 = balanced_accuracy_score(labels_hat0.detach().cpu().numpy().shape(-1), y0.detach().cpu().numpy().shape(-1))
-        train_acc1 = balanced_accuracy_score(labels_hat1.detach().cpu().numpy().shape(-1), y1.detach().cpu().numpy().shape(-1))
-        train_acc2 = balanced_accuracy_score(labels_hat2.detach().cpu().numpy().shape(-1), y2.detach().cpu().numpy().shape(-1))
+        train_acc0 = balanced_accuracy_score(labels_hat0.detach().cpu().numpy().reshape(-1), y0.detach().cpu().numpy().reshape(-1))
+        train_acc1 = balanced_accuracy_score(labels_hat1.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1))
+        train_acc2 = balanced_accuracy_score(labels_hat2.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1))
     
         output = {"train_loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2} #NEVER USE ORDEREDDICT!!!!
         wandb.log(output)
@@ -355,9 +355,9 @@ class ProtBertClassifier(ProtBertClassifier):
 #         val_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 #         val_acc1 = self.metric_acc1(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 #         val_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-        val_acc0 = balanced_accuracy_score(labels_hat0.detach().cpu().numpy().shape(-1), y0.detach().cpu().numpy().shape(-1))
-        val_acc1 = balanced_accuracy_score(labels_hat1.detach().cpu().numpy().shape(-1), y1.detach().cpu().numpy().shape(-1))
-        val_acc2 = balanced_accuracy_score(labels_hat2.detach().cpu().numpy().shape(-1), y2.detach().cpu().numpy().shape(-1))
+        val_acc0 = balanced_accuracy_score(labels_hat0.detach().cpu().numpy().reshape(-1), y0.detach().cpu().numpy().reshape(-1))
+        val_acc1 = balanced_accuracy_score(labels_hat1.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1))
+        val_acc2 = balanced_accuracy_score(labels_hat2.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1))
         
         output = {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2} #NEVER USE ORDEREDDICT!!!!
         self.log("val_loss", loss_val, prog_bar=True)
@@ -406,9 +406,9 @@ class ProtBertClassifier(ProtBertClassifier):
 #         test_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 #         test_acc1 = self.metric_acc1(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 #         test_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-        test_acc0 = balanced_accuracy_score(labels_hat0.detach().cpu().numpy().shape(-1), y0.detach().cpu().numpy().shape(-1))
-        test_acc1 = balanced_accuracy_score(labels_hat1.detach().cpu().numpy().shape(-1), y1.detach().cpu().numpy().shape(-1))
-        test_acc2 = balanced_accuracy_score(labels_hat2.detach().cpu().numpy().shape(-1), y2.detach().cpu().numpy().shape(-1))
+        test_acc0 = balanced_accuracy_score(labels_hat0.detach().cpu().numpy().reshape(-1), y0.detach().cpu().numpy().reshape(-1))
+        test_acc1 = balanced_accuracy_score(labels_hat1.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1))
+        test_acc2 = balanced_accuracy_score(labels_hat2.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1))
         
         output = {"test_loss": loss_test, "test_acc0": test_acc0, "test_acc1": test_acc1, "test_acc2": test_acc2} #NEVER USE ORDEREDDICT!!!!
 #         self.log("test_loss", loss_test, prog_bar=True)
