@@ -310,9 +310,6 @@ class ProtBertClassifier(ProtBertClassifier):
         train_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
         train_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
         train_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
-#         print(labels_hat0.detach().cpu().numpy().reshape(-1), y0.detach().cpu().numpy().reshape(-1))
-#         print(labels_hat1.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1))
-#         print(labels_hat2.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1))
         predY = np.stack([labels_hat0.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1)]).T #data,3
         dataY = np.stack([y0.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1)]).T #data,3
 
@@ -591,21 +588,27 @@ class ProtBertClassifier(ProtBertClassifier):
         len_val = len_full - len_train #- len_test
         return len_train, len_val #, len_test  
     
-    def __augment_data(self, tmp_dataloader):
+    def __augment_data_index(self, tmp_dataloader: DataLoader):
         inputs, targets = iter(tmp_dataloader).next()
         self.make_hook()
-        
-        model.forward(**train_data)
-        ext = model.fhook["encoded_feats"]
-        print(ext, ext.shape)
+        self.forward(**inputs) #Called only once after loading ckpt!
+        ext = inputs.fhook["encoded_feats"] #B,dim
         
         from imblearn.combine import SMOTEENN, SMOTETomek
         from imblearn.over_sampling import RandomOverSampler
         smote_enn = RandomOverSampler(random_state=0)
         X = ext.detach().cpu().numpy() #B,dim
-        y = targets_["labels"][:,0].detach().cpu().numpy()
+        y = targets["labels"][:,0].detach().cpu().numpy() #0,1,2 columns (chosen 0 bc of extreme imbalance)
         X_resampled, y_resampled = smote_enn.fit_resample(X, y)
+        return smote_enn.sample_indices_ #(OverN,)
+    
+    def __augment_data(self, tmp_dataloader: DataLoader, os_indices: np.ndarray):
+        inputs, targets = iter(tmp_dataloader).next() #Dict, Dict
+        inputs[]
         
+        aug_dataset = dl.SequenceDataset(inputs, targets)
+        return aug_dataset
+    
     def tokenizing(self, stage="train"):
         x = []
         for i in range(len(self.dataset)):
@@ -629,6 +632,7 @@ class ProtBertClassifier(ProtBertClassifier):
             batch_size=len(train),
             num_workers=self.hparam.num_workers,
         )
+        os_indices = self.__augment_data_index(tmp_dataloader)
         
         
         if stage == "train":
