@@ -335,7 +335,7 @@ class ProtBertClassifier(ProtBertClassifier):
         self.log("epoch", self.current_epoch)
         self.log("train_loss_mean", train_loss_mean, prog_bar=True)
 
-        tqdm_dict = {"epoch_train_loss": train_loss_mean, "epoch_acc0": train_acc0, "epoch_acc1": train_acc1, "epoch_acc2": train_acc2}
+        tqdm_dict = {"epoch_train_loss": train_loss_mean, "epoch_train_acc0": train_acc0, "epoch_train_acc1": train_acc1, "epoch_train_acc2": train_acc2}
         wandb.log(tqdm_dict)
         
         self.metric_acc0.reset()   
@@ -397,7 +397,7 @@ class ProtBertClassifier(ProtBertClassifier):
             self.log("val_loss_mean", val_loss_mean, prog_bar=True)
             self.log("epoch", self.current_epoch, prog_bar=True)
 
-            tqdm_dict = {"epoch_val_loss": val_loss_mean, "epoch_acc0": val_acc0, "epoch_acc1": val_acc1, "epoch_acc2": val_acc2}
+            tqdm_dict = {"epoch_val_loss": val_loss_mean, "epoch_val_acc0": val_acc0, "epoch_val_acc1": val_acc1, "epoch_val_acc2": val_acc2}
 
             wandb.log(tqdm_dict)
             self.metric_acc0.reset()   
@@ -455,7 +455,7 @@ class ProtBertClassifier(ProtBertClassifier):
         test_acc2 = balanced_accuracy_score(datay2, predy2)
         
         self.log("test_loss_mean", test_loss_mean, prog_bar=True)
-        tqdm_dict = {"epoch_test_loss": test_loss_mean, "epoch_acc0": test_acc0, "epoch_acc1": test_acc1, "epoch_acc2": test_acc2}
+        tqdm_dict = {"epoch_test_loss": test_loss_mean, "epoch_test_acc0": test_acc0, "epoch_test_acc1": test_acc1, "epoch_test_acc2": test_acc2}
         
         wandb.log(tqdm_dict)
         self.metric_acc0.reset()   
