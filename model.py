@@ -50,6 +50,7 @@ class ProtBertClassifier(pl.LightningModule):
         self.ner = self.hparam.ner #bool
 #         self.dataset = load_dataset(hparam.dataset, cache_dir=hparam.load_data_directory) #switch to a dataset!
 #         self.num_labels = np.unique(self.dataset["train"]["label"]).__len__() #2 for Filippo; many for Matt 
+        self.num_labels = 2
         # self.metric_acc = torchmetrics.Accuracy()
         self.z_dim = self.hparam.z_dim #Add this!
         if self.hparam.loss == "contrastive": self.register_parameter("W", torch.nn.Parameter(torch.rand(self.z_dim, self.z_dim))) #CURL purpose
