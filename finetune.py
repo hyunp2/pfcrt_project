@@ -606,7 +606,7 @@ class ProtBertClassifier(ProtBertClassifier):
         X_resampled, y_resampled = smote_enn.fit_resample(X, y)
         return smote_enn.sample_indices_ #(OverN,)
     
-    @staticmethd
+    @staticmethod
     def __augment_data(self, tmp_dataloader: DataLoader, os_indices: np.ndarray):
         inputs, targets = iter(tmp_dataloader).next() #Dict, Dict
         inputs["input_ids"] = inputs["input_ids"][os_indices]
