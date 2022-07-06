@@ -26,6 +26,7 @@ from explore_data import DataParser
 from focal_loss import *
 import curtsies.fmtfuncs as cf
 from sklearn.metrics import balanced_accuracy_score
+import warnings
 #https://github.com/HelloJocelynLu/t5chem/blob/main/t5chem/archived/MultiTask.py for more info
 
 # classifier.bert.pooler.dense.weight.requires_grad
@@ -34,6 +35,7 @@ from sklearn.metrics import balanced_accuracy_score
 logging.basicConfig()
 logger = logging.getLogger("BERT Fine-tuning")
 logger.setLevel(logging.DEBUG)
+warnings.simplefilter("ignore")
 
 class ProtBertClassifier(ProtBertClassifier):
     def __init__(self, hparam: argparse.ArgumentParser) -> None:
@@ -53,7 +55,7 @@ class ProtBertClassifier(ProtBertClassifier):
 
         # build weights for CE loss
         _ = self.__build_weight(self.hparam.nonuniform_weight) 
-        print(self.weight0, self.weight1, self.weight2)
+#         print(self.weight0, self.weight1, self.weight2)
         
         # Loss criterion initialization.
         _ = self.__build_loss() if not self.ner else self.__build_model_ner()
@@ -151,7 +153,7 @@ class ProtBertClassifier(ProtBertClassifier):
             valid_targets0 = targets[valid_targets[:,0]][:,0].to(targets) #only for targ0
             valid_targets1 = targets[valid_targets[:,1]][:,1].to(targets) #only for targ1
             valid_targets2 = targets[valid_targets[:,2]][:,2].to(targets) #only for targ2
-            print(cf.red(f"0: {valid_targets0.size()}, 1: {valid_targets1.size()}, 2: {valid_targets2.size()}" ))
+#             print(cf.red(f"0: {valid_targets0.size()}, 1: {valid_targets1.size()}, 2: {valid_targets2.size()}" ))
             self.weight0 = (1 / (torch.nn.functional.one_hot(valid_targets0).sum(dim=0) / valid_targets0.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
             self.weight1 = (1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
             self.weight2 = (1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
@@ -374,7 +376,8 @@ class ProtBertClassifier(ProtBertClassifier):
         val_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
         predY = np.stack([labels_hat0.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1)]).T #data,3
         dataY = np.stack([y0.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1)]).T #data,3
-
+        print(predY.shape, dataY.shape)
+        
         output = {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2} #NEVER USE ORDEREDDICT!!!!
         self.log("val_loss", loss_val, prog_bar=True)
 
