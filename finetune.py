@@ -602,7 +602,7 @@ class ProtBertClassifier(ProtBertClassifier):
         from imblearn.over_sampling import RandomOverSampler
         smote_enn = RandomOverSampler(random_state=0)
         X = ext.detach().cpu().numpy() #B,dim
-        y = targets["labels"][:,0].detach().cpu().numpy() #0,1,2 columns (chosen 0 bc of extreme imbalance)
+        y = targets["labels"][:, self.hparam.basis].detach().cpu().numpy() #0,1,2 columns (chosen 0 bc of extreme imbalance)
         X_resampled, y_resampled = smote_enn.fit_resample(X, y)
         return smote_enn.sample_indices_ #(OverN,)
     
