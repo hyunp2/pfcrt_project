@@ -148,6 +148,7 @@ if __name__ == "__main__":
     targets = data_trunc.iloc[:,2:].values #list type including nans; (B,3)
     targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
     
+    """
     valid_targets = (targets < hparams.fillna_val) #B,3
 #     print(valid_targets.any(dim=-1), targets, targets.size())
     
@@ -160,15 +161,20 @@ if __name__ == "__main__":
     weight1 = (1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)).to(targets)
     weight2 = (1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)).to(targets)
 #     print(weight0, weight1, weight2)
+    """
     
     dataset = ds.SequenceDataset(inputs=inputs, targets=targets)
-    custom_dataloader = torch.utils.data.DataLoader(dataset, shuffle=True, batch_size=hparams.batch_size)
+    custom_dataloader = torch.utils.data.DataLoader(dataset, shuffle=False, batch_size=hparams.batch_size)
     
     batch = iter(custom_dataloader).next()
     inputs_, targets_ = batch
     out = model.forward(**inputs_) #B3
     print(out)
     print(model.loss(out, targets_))
+    
+    model.make_hook()
+    ext = model.fhook["encoded_feats"]
+    print(ext, ext.shape)
 #     trainer.predict(model, dataloaders=custom_dataloader)
     
 #     python -m explore_data --ngpus 1 --accelerator gpu --strategy ddp --load-model-checkpoint epoch=16-train_loss_mean=0.00-val_loss_mean=0.32.ckpt -b 4
