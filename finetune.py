@@ -50,6 +50,8 @@ class ProtBertClassifier(ProtBertClassifier):
         self.z_dim = self.hparam.z_dim #Add this!
         if self.hparam.loss == "contrastive": self.register_parameter("W", torch.nn.Parameter(torch.rand(self.z_dim, self.z_dim))) #CURL purpose
         
+#         self.__augment_data()
+        
         # build model
         _ = self.__build_model() if not self.ner else self.__build_model_ner()
 
@@ -65,7 +67,7 @@ class ProtBertClassifier(ProtBertClassifier):
         print(cf.on_yellow(f"CE-loss {self.hparam.use_ce}; Non-uniform weights {self.hparam.nonuniform_weight}"))
         print(cf.on_yellow(f"Non-uniform weights are {self.weight0} and {self.weight1} and {self.weight2}"))
 
-
+        
     def __build_model(self) -> None:
         """ Init BERT model + tokenizer + classification head."""
         #model = locals()["model"] if locals()["model"] and isinstance(locals()["model"], BertModel) else BertModel.from_pretrained(self.model_name, cache_dir=self.hparam.load_model_directory)
@@ -585,10 +587,13 @@ class ProtBertClassifier(ProtBertClassifier):
         """DONE: Need to change split schemes!"""
         len_full = len(full_dataset)
         len_train = int(len_full * train_frac)
-        len_test = int(0.1 * len_full)
-        len_val = len_full - len_train - len_test
-        return len_train, len_val, len_test  
+#         len_test = int(0.1 * len_full)
+        len_val = len_full - len_train #- len_test
+        return len_train, len_val #, len_test  
     
+    def __augment_data(self, train_data):
+        
+        
     def tokenizing(self, stage="train"):
         x = []
         for i in range(len(self.dataset)):
@@ -604,14 +609,18 @@ class ProtBertClassifier(ProtBertClassifier):
         targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
 
         dataset = dl.SequenceDataset(inputs, targets)
-        train, val, test = torch.utils.data.random_split(dataset, self._get_split_sizes(self.hparam.train_frac, dataset),
+        train, val = torch.utils.data.random_split(dataset, self._get_split_sizes(self.hparam.train_frac, dataset),
                                                                 generator=torch.Generator().manual_seed(0))
+        train_inputs = train.inputs
+        train_targets = train.targets
+        
+        
         if stage == "train":
             dataset = train
         elif stage == "val":
             dataset = val
-        elif stage == "test":
-            dataset = test
+#         elif stage == "test":
+#             dataset = test
             
         return dataset #torch Dataset
 
@@ -623,7 +632,7 @@ class ProtBertClassifier(ProtBertClassifier):
         """ Function that loads the validation set. """
         return super().val_dataloader()
 
-    def test_dataloader(self) -> DataLoader:
-        """ Function that loads the validation set. """
-        return super().test_dataloader()
+#     def test_dataloader(self) -> DataLoader:
+#         """ Function that loads the validation set. """
+#         return super().test_dataloader()
 
