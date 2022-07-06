@@ -9,10 +9,11 @@ from torch.autograd import Variable
 
 class FocalLoss(nn.Module):
     """SOFTMAX (only best class contrib) (not SIGMOID; adding all class contribs)"""
-    def __init__(self, gamma=2., alpha=None, size_average=True):
+    def __init__(self, gamma=2., alpha=None, size_average=True, threshold=100):
         super(FocalLoss, self).__init__()
         self.gamma = gamma
         self.alpha = alpha
+        self.threshold = threshold
         if isinstance(alpha,(float,int)): self.alpha = torch.Tensor([alpha,1-alpha])
         if isinstance(alpha,list): self.alpha = torch.Tensor(alpha)
         self.size_average = size_average
@@ -24,8 +25,10 @@ class FocalLoss(nn.Module):
 #             input = input.contiguous().view(-1,input.size(2))   # N,H*W,C => N*H*W,C
             input = input #B,dim
         target = target.view(-1,1) #B,1
-
-        logpt = F.log_softmax(input)
+        mask = (target < self.threshold).view(-1)
+        target = target[mask] #b,1
+        
+        logpt = F.log_softmax(input[mask])
         logpt = logpt.gather(1,target)
         logpt = logpt.view(-1)
         pt = logpt.data.exp().data #non-diff
