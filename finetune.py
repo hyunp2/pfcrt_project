@@ -59,6 +59,8 @@ class ProtBertClassifier(ProtBertClassifier):
 
         self.freeze_encoder()
         print(cf.on_yellow(f"CE-loss {self.haparm.use_ce}; Non-uniform weights {self.hparam.nonuniform_weight}"))
+        print(cf.on_yellow(f"Non-uniform weights are {self.weight0} and {self.weight1} and {self.weight2}"))
+
 
     def __build_model(self) -> None:
         """ Init BERT model + tokenizer + classification head."""
