@@ -120,7 +120,7 @@ class ProtBertClassifier(ProtBertClassifier):
         self.fhook = dict()
         def hook(m, i, o):
             self.fhook["encoded_feats"] = o #(B,1024)
-        self.fhook_handle = self.head[1].register_forward_hook(hook) #Call Forward hook with "model.fhook["encoded_feats"]" of (B,C); for NER, it is (B,L,C)
+        self.fhook_handle = self.head[0].register_forward_hook(hook) #Call Forward hook with "model.fhook["encoded_feats"]" of (B,C); for NER, it is (B,L,C)
  
     def __build_loss(self):
         """ Initializes the loss function/s. """
@@ -595,7 +595,7 @@ class ProtBertClassifier(ProtBertClassifier):
         token_type_ids = inputs["token_type_ids"].to(self.device)
         attention_mask = inputs["attention_mask"].to(self.device)
         out = self.forward(input_ids=input_ids, token_type_ids=token_type_ids, attention_mask=attention_mask) #Called only once after loading ckpt!
-        print(out)
+        print(self.fhook)
         ext = self.fhook["encoded_feats"] #B,dim
         
         from imblearn.combine import SMOTEENN, SMOTETomek
