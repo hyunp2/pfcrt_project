@@ -53,7 +53,7 @@ class ProtBertClassifier(ProtBertClassifier):
 
         # build weights for CE loss
         _ = self.__build_weight(self.hparam.nonuniform_weight) 
-#         print(self.weight0, self.weight1, self.weight2)
+        print(self.weight0, self.weight1, self.weight2)
         
         # Loss criterion initialization.
         _ = self.__build_loss() if not self.ner else self.__build_model_ner()
@@ -127,9 +127,9 @@ class ProtBertClassifier(ProtBertClassifier):
             target0 = targets.get("labels", None)[:,0].to(logits0).long()
             target1 = targets.get("labels", None)[:,1].to(logits0).long()
             target2 = targets.get("labels", None)[:,2].to(logits0).long()
-            self.weight0 = self.weight0.to(logits0) if self.hparam.nonuniform_weight else None
-            self.weight1 = self.weight1.to(logits0) if self.hparam.nonuniform_weight else None
-            self.weight2 = self.weight2.to(logits0) if self.hparam.nonuniform_weight else None
+            self.weight0 = self.weight0.to(logits0) #if self.hparam.nonuniform_weight else None
+            self.weight1 = self.weight1.to(logits0) #if self.hparam.nonuniform_weight else None
+            self.weight2 = self.weight2.to(logits0) #if self.hparam.nonuniform_weight else None
 
             if self.hparam.use_ce:
                 loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight0)(logits0, target0) #ignore_index=100 is from dataset!
@@ -151,13 +151,14 @@ class ProtBertClassifier(ProtBertClassifier):
             valid_targets0 = targets[valid_targets[:,0]][:,0].to(targets) #only for targ0
             valid_targets1 = targets[valid_targets[:,1]][:,1].to(targets) #only for targ1
             valid_targets2 = targets[valid_targets[:,2]][:,2].to(targets) #only for targ2
+            print(cf.red("0: {valid_targets0.size()}, 1: {valid_targets1.size()}, 2: {valid_targets2.size()}" ))
             self.weight0 = (1 / (torch.nn.functional.one_hot(valid_targets0).sum(dim=0) / valid_targets0.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
             self.weight1 = (1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
             self.weight2 = (1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
         else:
-            self.weight0 = None
-            self.weight1 = None
-            self.weight2 = None
+            self.weight0 = targets.new_ones(3)
+            self.weight1 = targets.new_ones(3)
+            self.weight2 = targets.new_ones(3)
             
 #         self.weight0 = torch.nn.functional.normalize(self.weight0, dim=-1) if self.hparam.nonuniform_weight else None
 #         self.weight1 = torch.nn.functional.normalize(self.weight1, dim=-1) if self.hparam.nonuniform_weight else None
