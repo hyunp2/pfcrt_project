@@ -135,16 +135,16 @@ if __name__ == "__main__":
     
     import dataset as ds
 #     dataset = load_dataset("yarongef/human_proteome_triplets", cache_dir=hparams.load_data_directory)
-#     tokenizer=BertTokenizer.from_pretrained("Rostlab/prot_bert",do_lower_case=False, return_tensors="pt", cache_dir=hparams.load_model_directory)
+    tokenizer=BertTokenizer.from_pretrained("Rostlab/prot_bert",do_lower_case=False, return_tensors="pt", cache_dir=hparams.load_model_directory)
 
     x = []
     for i in range(len(data_trunc)):
         x.append(' '.join(data_trunc.iloc[i,1])) #AA Sequence
     proper_inputs = x
-#     inputs = tokenizer.batch_encode_plus(proper_inputs,
-#                                       add_special_tokens=True,
-#                                       padding=True, truncation=True, return_tensors="pt",
-#                                       max_length=hparams.max_length) #Tokenize inputs as a dict type of Tensors
+    inputs = tokenizer.batch_encode_plus(proper_inputs,
+                                      add_special_tokens=True,
+                                      padding=True, truncation=True, return_tensors="pt",
+                                      max_length=hparams.max_length) #Tokenize inputs as a dict type of Tensors
     targets = data_trunc.iloc[:,2:].values #list type including nans; (B,3)
     targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
     
@@ -156,18 +156,10 @@ if __name__ == "__main__":
     valid_targets2 = targets[valid_targets[:,2]][:,2].to(targets) #only for targ2
 #     print(valid_targets0, valid_targets1, valid_targets2)
 
-    from imblearn.combine import SMOTEENN
-    smote_enn = SMOTEENN(random_state=0)
-    X = np.array(proper_inputs).reshape(-1,1)
-    y = valid_targets0.detach().cpu().numpy()
-    X_resampled, y_resampled = smote_enn.fit_resample(X, y)
-    print(X, X_resampled)
-
     weight0 = (1 / (torch.nn.functional.one_hot(valid_targets0).sum(dim=0) / valid_targets0.size(0) + torch.finfo(torch.float32).eps)).to(targets)
     weight1 = (1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)).to(targets)
     weight2 = (1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)).to(targets)
 #     print(weight0, weight1, weight2)
-    
     
     dataset = ds.SequenceDataset(inputs=inputs, targets=targets)
     custom_dataloader = torch.utils.data.DataLoader(dataset, shuffle=True, batch_size=hparams.batch_size)
@@ -182,6 +174,11 @@ if __name__ == "__main__":
 #     python -m explore_data --ngpus 1 --accelerator gpu --strategy ddp --load-model-checkpoint epoch=16-train_loss_mean=0.00-val_loss_mean=0.32.ckpt -b 4
 
     
-    
+#     from imblearn.combine import SMOTEENN
+#     smote_enn = SMOTEENN(random_state=0)
+#     X = np.array(proper_inputs).reshape(-1,1)
+#     y = valid_targets0.detach().cpu().numpy()
+#     X_resampled, y_resampled = smote_enn.fit_resample(X, y)
+#     print(X, X_resampled)
 
 
