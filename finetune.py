@@ -158,9 +158,9 @@ class ProtBertClassifier(ProtBertClassifier):
             self.weight1 = None
             self.weight2 = None
             
-        self.weight0 = torch.nn.functional.normalize(self.weight0, dim=-1) if self.hparam.nonuniform_weight else None
-        self.weight1 = torch.nn.functional.normalize(self.weight1, dim=-1) if self.hparam.nonuniform_weight else None
-        self.weight2 = torch.nn.functional.normalize(self.weight2, dim=-1) if self.hparam.nonuniform_weight else None
+#         self.weight0 = torch.nn.functional.normalize(self.weight0, dim=-1) if self.hparam.nonuniform_weight else None
+#         self.weight1 = torch.nn.functional.normalize(self.weight1, dim=-1) if self.hparam.nonuniform_weight else None
+#         self.weight2 = torch.nn.functional.normalize(self.weight2, dim=-1) if self.hparam.nonuniform_weight else None
         
     def compute_logits_CURL(self, z_a, z_pos):
         """
