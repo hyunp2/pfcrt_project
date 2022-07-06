@@ -604,8 +604,10 @@ class ProtBertClassifier(ProtBertClassifier):
     
     def __augment_data(self, tmp_dataloader: DataLoader, os_indices: np.ndarray):
         inputs, targets = iter(tmp_dataloader).next() #Dict, Dict
-        inputs[]
-        
+        inputs["input_ids"] = inputs["input_ids"][os_indices]
+        inputs["token_type_ids"] = inputs["token_type_ids"][os_indices]
+        inputs["attention_mask"] = inputs["attention_mask"][os_indices]
+        targets["labels"] = targets["labels"][os_indices]
         aug_dataset = dl.SequenceDataset(inputs, targets)
         return aug_dataset
     
@@ -628,15 +630,15 @@ class ProtBertClassifier(ProtBertClassifier):
                                                                 generator=torch.Generator().manual_seed(0))
         tmp_dataloader = DataLoader(
             dataset=train,
-            sampler=torch.utils.data.RandomSampler(train),
+            shuffle=None,
             batch_size=len(train),
             num_workers=self.hparam.num_workers,
         )
         os_indices = self.__augment_data_index(tmp_dataloader)
-        
+        aug_train = self.__augment_data(tmp_dataloader, os_indices)
         
         if stage == "train":
-            dataset = train
+            dataset = aug_train
         elif stage == "val":
             dataset = val
 #         elif stage == "test":
