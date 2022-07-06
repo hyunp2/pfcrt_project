@@ -620,8 +620,7 @@ class ProtBertClassifier(ProtBertClassifier):
         dataset = dl.SequenceDataset(inputs, targets)
         train, val = torch.utils.data.random_split(dataset, self._get_split_sizes(self.hparam.train_frac, dataset),
                                                                 generator=torch.Generator().manual_seed(0))
-        train_inputs = train.inputs
-        train_targets = train.targets
+        tmp_dataloader = DataLoader(train)
         
         if stage == "train":
             dataset = train
