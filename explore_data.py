@@ -168,10 +168,10 @@ if __name__ == "__main__":
     
     batch = iter(custom_dataloader).next()
     inputs_, targets_ = batch
-    print(inputs_, targets_)
+#     print(inputs_, targets_)
     out = model.forward(**inputs_) #B3
-    print(out)
-    print(model.loss(out, targets_))
+#     print(out)
+#     print(model.loss(out, targets_))
     
     model.make_hook()
     ext = model.fhook["encoded_feats"]
