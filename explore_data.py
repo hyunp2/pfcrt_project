@@ -156,6 +156,12 @@ if __name__ == "__main__":
     valid_targets2 = targets[valid_targets[:,2]][:,2].to(targets) #only for targ2
 #     print(valid_targets0, valid_targets1, valid_targets2)
 
+    from imblearn.combine import SMOTEENN
+    smote_enn = SMOTEENN(random_state=0)
+    X = proper_inputs
+    y = targets.detach().cpu().numpy()
+    X_resampled, y_resampled = smote_enn.fit_resample(X, y)
+
     weight0 = (1 / (torch.nn.functional.one_hot(valid_targets0).sum(dim=0) / valid_targets0.size(0) + torch.finfo(torch.float32).eps)).to(targets)
     weight1 = (1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)).to(targets)
     weight2 = (1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)).to(targets)
