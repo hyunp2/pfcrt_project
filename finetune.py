@@ -24,6 +24,7 @@ from torchcrf import CRF
 from model import ProtBertClassifier
 from explore_data import DataParser
 from focal_loss import *
+import curtsies.fmtfuncs as cf
 
 #https://github.com/HelloJocelynLu/t5chem/blob/main/t5chem/archived/MultiTask.py for more info
 
@@ -57,7 +58,7 @@ class ProtBertClassifier(ProtBertClassifier):
         _ = self.__build_loss() if not self.ner else self.__build_model_ner()
 
         self.freeze_encoder()
-        
+        print(cf.on_yellow(f"CE-loss {self.haparm.use_ce}; Non-uniform weights {self.hparam.nonuniform_weight}"))
 
     def __build_model(self) -> None:
         """ Init BERT model + tokenizer + classification head."""
