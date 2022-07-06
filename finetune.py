@@ -182,16 +182,16 @@ class ProtBertClassifier(ProtBertClassifier):
             logger.info(f"\n-- Encoder model fine-tuning")
             for param in self.model.parameters():
                 param.requires_grad = True
-            for param in self.head.parameters():
-                param.requires_grad = True
+#             for param in self.head.parameters():
+#                 param.requires_grad = True
             self._frozen = False
 
     def freeze_encoder(self) -> None:
         """ freezes the encoder layer. """
         for param in self.model.parameters():
             param.requires_grad = False
-        for param in self.head.parameters():
-            param.requires_grad = False
+#         for param in self.head.parameters():
+#             param.requires_grad = False
         self._frozen = True
 
     # https://github.com/UKPLab/sentence-transformers/blob/eb39d0199508149b9d32c1677ee9953a84757ae4/sentence_transformers/models/Pooling.py
@@ -347,7 +347,7 @@ class ProtBertClassifier(ProtBertClassifier):
         val_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 
         output = {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2} #NEVER USE ORDEREDDICT!!!!
-#         self.log("val_loss", loss_val, prog_bar=True)
+        self.log("val_loss", loss_val, prog_bar=True)
 
         wandb.log(output)
 
@@ -503,7 +503,7 @@ class ProtBertClassifier(ProtBertClassifier):
     def configure_optimizers(self):
         """ Sets different Learning rates for different parameter groups. """
         parameters = [
-            {"params": self.head.parameters()},
+            {"params": self.head.parameters(), "lr": self.hparam.learning_rate*0.1},
             {"params": self.model.parameters()},
             {"params": self.classifier0.parameters()},
             {"params": self.classifier1.parameters()},
@@ -520,7 +520,9 @@ class ProtBertClassifier(ProtBertClassifier):
             num_warmup_steps=warmup_steps,
             num_training_steps=total_training_steps,
         )
-        scheduler = {"scheduler": scheduler, "interval": "step", "frequency": 1}
+        optimizer = {"optimizer": optimizer, "interval": "step", "frequency": 1}
+        #https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#:~:text=is%20shown%20below.-,lr_scheduler_config,-%3D%20%7B%0A%20%20%20%20%23%20REQUIRED
+        scheduler = {"scheduler": scheduler, "interval": "step", "frequency": 1, "monitor": "val_loss"} #Every step/epoch with Frequency 1etc by monitoring val_loss if needed
 
         return [optimizer], [scheduler]
 
