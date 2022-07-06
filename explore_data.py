@@ -185,7 +185,8 @@ if __name__ == "__main__":
 
     
     from imblearn.combine import SMOTEENN, SMOTETomek
-    smote_enn = SMOTETomek(random_state=0)
+    from imblearn.over_sampling import RandomOverSampler
+    smote_enn = RandomOverSampler(random_state=0)
     X = ext.detach().cpu().numpy() #B,dim
     y = targets_["labels"][:,0].detach().cpu().numpy()
     print(X.shape, y.shape)
