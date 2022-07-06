@@ -14,7 +14,7 @@ class FocalLoss(nn.Module):
         self.gamma = gamma
 #         self.alpha = alpha
         self.beta = beta
-        self.weights = weights
+        self.weight = weight
         self.effective_num = torch.Tensor(list(map(lambda inp: (1 - beta) / (1 - beta**(inp)), weight ))) #nclass,
         self.threshold = threshold
 #         if isinstance(alpha,(float,int)): self.alpha = torch.Tensor([alpha,1-alpha])
