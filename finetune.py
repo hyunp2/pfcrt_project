@@ -592,6 +592,9 @@ class ProtBertClassifier(ProtBertClassifier):
         return len_train, len_val #, len_test  
     
     def __augment_data(self, train_data):
+        model.forward(**train_data)
+        ext = model.fhook["encoded_feats"]
+        print(ext, ext.shape)
         
         from imblearn.combine import SMOTEENN, SMOTETomek
         from imblearn.over_sampling import RandomOverSampler
@@ -619,7 +622,6 @@ class ProtBertClassifier(ProtBertClassifier):
                                                                 generator=torch.Generator().manual_seed(0))
         train_inputs = train.inputs
         train_targets = train.targets
-        
         
         if stage == "train":
             dataset = train
