@@ -78,7 +78,7 @@ class ModelAnalyzer(object):
             inputs, tgt_idx, tk_id, attn_mask = list(map(lambda inp: inp[idx:idx+1], (inputs, tgt_idx, additional_forward_args[0], additional_forward_args[1] ))) #only one sample chosen;; must be done for BERT visualization!
             additional_forward_args = (tk_id, attn_mask, additional_forward_args[-1]) #lambda_fn mapped results + False arg passing...
         
-            if attribute = "layer_integrated_gradients":
+            if attribute == "layer_integrated_gradients":
                 assert len(inputs) == 1 and len(tgt_idx) == 1, "Only one sequence info can be used..."
             else:
                 pass
