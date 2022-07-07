@@ -57,7 +57,8 @@ class ModelAnalyzer(object):
 
     def get_predictions(self, ):
         """call test_step function of pl.LightningModule"""
-        trainer = pl.Trainer(devices=self.hparam.ngpus, accelerator=self.hparam.accelerator)
+        csv_logger = pl.loggers.CSVLogger(save_dir=hparams.load_model_directory)
+        trainer = pl.Trainer(devices=self.hparam.ngpus, accelerator=self.hparam.accelerator, logger=[csv_logger])
         trainer.test(self.model, self.dmo) #Get loss and acc
 
     def get_highlights(self, attribute="saliency", normed=False, inputs: torch.Tensor =None, tgt_idx: int = 0, additional_forward_args = None):
