@@ -86,56 +86,62 @@ class ProtBertClassifier(ProtBertClassifier):
             nn.Tanh(),
         )
         
-#         self.classifier0 = nn.Sequential(
-#             nn.Linear(self.encoder_features, self.encoder_features),
-#             nn.SiLU(inplace=True),
-#             nn.Linear(self.encoder_features, self.encoder_features),
-#             nn.SiLU(inplace=True),
-#             nn.Linear(self.encoder_features, 3),
-#         )
-        
-#         self.classifier1 = nn.Sequential(
-#             nn.Linear(self.encoder_features, self.encoder_features),
-#             nn.SiLU(inplace=True),
-#             nn.Linear(self.encoder_features, self.encoder_features),
-#             nn.SiLU(inplace=True),
-#             nn.Linear(self.encoder_features, 3),
-#         )
-        
-#         self.classifier2 = nn.Sequential(
-#             nn.Linear(self.encoder_features, self.encoder_features),
-#             nn.SiLU(inplace=True),
-#             nn.Linear(self.encoder_features, self.encoder_features),
-#             nn.SiLU(inplace=True),
-#             nn.Linear(self.encoder_features, 2),
-#         )
-
         self.classifier0 = nn.Sequential(
             nn.Linear(self.encoder_features, self.encoder_features),
-            nn.BatchNorm1d(self.encoder_features),
-            nn.LeakyReLU(inplace=True),
+            nn.ReLU(inplace=True),
             nn.Linear(self.encoder_features, self.encoder_features),
-            nn.LeakyReLU(inplace=True),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.ReLU(inplace=True),
             nn.Linear(self.encoder_features, 3),
         )
         
         self.classifier1 = nn.Sequential(
             nn.Linear(self.encoder_features, self.encoder_features),
-            nn.BatchNorm1d(self.encoder_features),
-            nn.LeakyReLU(inplace=True),
+            nn.ReLU(inplace=True),
             nn.Linear(self.encoder_features, self.encoder_features),
-            nn.LeakyReLU(inplace=True),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.ReLU(inplace=True),
             nn.Linear(self.encoder_features, 3),
         )
         
         self.classifier2 = nn.Sequential(
             nn.Linear(self.encoder_features, self.encoder_features),
-            nn.BatchNorm1d(self.encoder_features),
-            nn.LeakyReLU(inplace=True),
+            nn.ReLU(inplace=True),
             nn.Linear(self.encoder_features, self.encoder_features),
-            nn.LeakyReLU(inplace=True),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.ReLU(inplace=True),
             nn.Linear(self.encoder_features, 2),
         )
+
+#         self.classifier0 = nn.Sequential(
+#             nn.Linear(self.encoder_features, self.encoder_features),
+#             nn.BatchNorm1d(self.encoder_features),
+#             nn.LeakyReLU(inplace=True),
+#             nn.Linear(self.encoder_features, self.encoder_features),
+#             nn.LeakyReLU(inplace=True),
+#             nn.Linear(self.encoder_features, 3),
+#         )
+        
+#         self.classifier1 = nn.Sequential(
+#             nn.Linear(self.encoder_features, self.encoder_features),
+#             nn.BatchNorm1d(self.encoder_features),
+#             nn.LeakyReLU(inplace=True),
+#             nn.Linear(self.encoder_features, self.encoder_features),
+#             nn.LeakyReLU(inplace=True),
+#             nn.Linear(self.encoder_features, 3),
+#         )
+        
+#         self.classifier2 = nn.Sequential(
+#             nn.Linear(self.encoder_features, self.encoder_features),
+#             nn.BatchNorm1d(self.encoder_features),
+#             nn.LeakyReLU(inplace=True),
+#             nn.Linear(self.encoder_features, self.encoder_features),
+#             nn.LeakyReLU(inplace=True),
+#             nn.Linear(self.encoder_features, 2),
+#         )
         
         if self.hparam.loss == "contrastive": 
             self.make_hook()
