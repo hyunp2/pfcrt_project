@@ -685,10 +685,10 @@ class ProtBertClassifier(ProtBertClassifier):
         
         if stage == "train":
             dataset = train
-        elif stage == "val":
-            dataset = val
         elif stage == "test":
             dataset = val
+#         elif stage == "test":
+#             dataset = val
             
         return dataset #torch Dataset
 
