@@ -115,6 +115,8 @@ class ProtBertClassifier(ProtBertClassifier):
             nn.BatchNorm1d(self.encoder_features),
             nn.LeakyReLU(inplace=True),
             nn.Linear(self.encoder_features, self.encoder_features),
+                        nn.BatchNorm1d(self.encoder_features),
+
             nn.LeakyReLU(inplace=True),
             nn.Linear(self.encoder_features, 3),
         )
@@ -124,6 +126,8 @@ class ProtBertClassifier(ProtBertClassifier):
             nn.BatchNorm1d(self.encoder_features),
             nn.LeakyReLU(inplace=True),
             nn.Linear(self.encoder_features, self.encoder_features),
+                        nn.BatchNorm1d(self.encoder_features),
+
             nn.LeakyReLU(inplace=True),
             nn.Linear(self.encoder_features, 3),
         )
@@ -133,6 +137,8 @@ class ProtBertClassifier(ProtBertClassifier):
             nn.BatchNorm1d(self.encoder_features),
             nn.LeakyReLU(inplace=True),
             nn.Linear(self.encoder_features, self.encoder_features),
+                        nn.BatchNorm1d(self.encoder_features),
+
             nn.LeakyReLU(inplace=True),
             nn.Linear(self.encoder_features, 2),
         )
