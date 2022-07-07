@@ -177,10 +177,10 @@ if __name__ == "__main__":
     from train import get_args
     hparam = get_args()
     modelanalyzer = ModelAnalyzer(hparam=hparam)
-    #modelanalyzer.get_predictions()
-    batch, target = next(iter(modelanalyzer.dmo))
-    input_ids = batch.pop("input_ids", None)
+    modelanalyzer.get_predictions()
+#     batch, target = next(iter(modelanalyzer.dmo))
+#     input_ids = batch.pop("input_ids", None)
     #print(modelanalyzer.model.model.config.max_position_embeddings)
-    ans = modelanalyzer.get_highlights(attribute="layer_integrated_gradients", inputs=input_ids, tgt_idx=target["labels"].view(-1,), additional_forward_args=(batch["token_type_ids"], batch["attention_mask"], False))
-    modelanalyzer.get_statistics_latents()
+#     ans = modelanalyzer.get_highlights(attribute="layer_integrated_gradients", inputs=input_ids, tgt_idx=target["labels"].view(-1,), additional_forward_args=(batch["token_type_ids"], batch["attention_mask"], False))
+#     modelanalyzer.get_statistics_latents()
     #CUDA_VISIBLE_DEVICES=0 python utils.py -ls 0.1 -b 512 -ckpt epoch=37-train_acc_mean=0.95-val_acc_mean=0.95.ckpt
