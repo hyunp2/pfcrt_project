@@ -55,7 +55,7 @@ def get_args():
     #Misc.
     parser.add_argument('--seed', type=int, default=42, help='seeding number')
     parser.add_argument('--precision', type=int, default=32, choices=[16, 32], help='Floating point precision')
-    parser.add_argument('--monitor', type=str, default="epoch_val_acc1", help='metric to watch')
+    parser.add_argument('--monitor', type=str, default="epoch_val_acc_B", help='metric to watch')
     parser.add_argument('--loss', '-l', type=str, default="classification", choices=['classification', 'contrastive', 'ner'], help='loss for training')
     parser.add_argument('--save_top_k', type=int, default="5", help='num of models to save')
     parser.add_argument('--patience', type=int, default=10, help='patience for stopping')
@@ -105,7 +105,7 @@ def _main():
     #  -------------------------------
     # initialize Model Checkpoint Saver
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
-    filename="{epoch}-{epoch_val_acc0}-{epoch_val_acc1}-{epoch_val_acc2}",
+    filename="{epoch}-{epoch_val_acc_A}-{epoch_val_acc_B}-{epoch_val_acc_C}",
     save_top_k=hparams.save_top_k,
     verbose=True,
     monitor=hparams.monitor,
