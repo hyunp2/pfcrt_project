@@ -23,6 +23,7 @@ from typing import *
 import MDAnalysis as mda
 import sklearn.manifold
 import deprecation
+from captum.attr import visualization
 
 #https://github.com/HelloJocelynLu/t5chem/blob/main/t5chem/archived/MultiTask.py for more info
 
