@@ -649,8 +649,8 @@ class ProtBertClassifier(ProtBertClassifier):
             dataset = train
         elif stage == "val":
             dataset = val
-#         elif stage == "test":
-#             dataset = test
+        elif stage == "test":
+            dataset = val
             
         return dataset #torch Dataset
 
@@ -662,9 +662,9 @@ class ProtBertClassifier(ProtBertClassifier):
         """ Function that loads the validation set. """
         return super().val_dataloader()
 
-#     def test_dataloader(self) -> DataLoader:
-#         """ Function that loads the validation set. """
-#         return super().test_dataloader()
+    def test_dataloader(self) -> DataLoader:
+        """ Function that loads the validation set. """
+        return super().test_dataloader()
 
 
 # python -m train --ngpus "auto" --accelerator gpu --strategy none -b 8 --finetune -ckpt ckpt_for_finetune.ckpt --patience 100 --train_frac 0.8 --use_ce --aug
