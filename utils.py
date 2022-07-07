@@ -30,7 +30,7 @@ class ModelAnalyzer(object):
     def __init__(self, hparam: argparse.ArgumentParser):
         """Load trained classifier"""
         self.hparam = hparam
-        self.model = Model.ProtBertClassifier.load_from_checkpoint(checkpoint_path=os.path.join(hparam.load_model_directory, hparam.load_model_checkpoint), hparam=hparam) if not self.hparam.finetune else FModel.ProtBertClassifier.load_from_checkpoint(checkpoint_path=os.path.join(hparam.load_model_directory, hparam.load_model_checkpoint)
+        self.model = Model.ProtBertClassifier.load_from_checkpoint(checkpoint_path=os.path.join(hparam.load_model_directory, hparam.load_model_checkpoint), hparam=hparam) if not self.hparam.finetune else FModel.ProtBertClassifier.load_from_checkpoint(checkpoint_path=os.path.join(hparam.load_model_directory, hparam.load_model_checkpoint))
         self.model.freeze()
         self.tokenizer = self.model.tokenizer
         self.dmo = self.model.test_dataloader() #Test dataloader instance
