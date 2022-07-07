@@ -105,7 +105,7 @@ def _main():
     #  -------------------------------
     # initialize Model Checkpoint Saver
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
-    filename="{epoch}-{epoch_val_acc0:.2f}-{epoch_val_acc1:.2f}-{epoch_val_acc2:.2f}",
+    filename="{epoch}-{epoch_val_acc0:.2f}",
     save_top_k=hparams.save_top_k,
     verbose=True,
     monitor=hparams.monitor,
