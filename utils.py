@@ -18,6 +18,7 @@ from torch.utils.data import DataLoader
 import argparse
 import dataset as dl
 import model as Model
+import finetune as FModel
 from typing import *
 import MDAnalysis as mda
 import sklearn.manifold
@@ -29,7 +30,7 @@ class ModelAnalyzer(object):
     def __init__(self, hparam: argparse.ArgumentParser):
         """Load trained classifier"""
         self.hparam = hparam
-        self.model = model = Model.ProtBertClassifier.load_from_checkpoint(checkpoint_path=os.path.join(hparam.load_model_directory, hparam.load_model_checkpoint), hparam=hparam)
+        self.model = Model.ProtBertClassifier.load_from_checkpoint(checkpoint_path=os.path.join(hparam.load_model_directory, hparam.load_model_checkpoint), hparam=hparam) if not self.hparam.finetune else FModel.ProtBertClassifier.load_from_checkpoint(checkpoint_path=os.path.join(hparam.load_model_directory, hparam.load_model_checkpoint)
         self.model.freeze()
         self.tokenizer = self.model.tokenizer
         self.dmo = self.model.test_dataloader() #Test dataloader instance
@@ -51,7 +52,7 @@ class ModelAnalyzer(object):
 
     def get_predictions(self, ):
         """call test_step function of pl.LightningModule"""
-        trainer = pl.Trainer(gpus=self.hparam.ngpus)
+        trainer = pl.Trainer(ngpus="auto", accelerator="gpu")
         trainer.test(self.model, self.dmo) #Get loss and acc
 
     def get_highlights(self, attribute="saliency", normed=False, inputs: torch.Tensor =None, tgt_idx: int = 0, additional_forward_args = None):
