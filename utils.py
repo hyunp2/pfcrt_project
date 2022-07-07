@@ -116,7 +116,7 @@ class ModelAnalyzer(object):
         vis = visualization.VisualizationDataRecord(**vis_dict) #datarecords instance (not in doc!)
         return vis, vis_dict #not a list yet
 
-    def _visualize_layer_attr_logic(self, vis: List[visualization.VisualizationDataRecord])
+    def _visualize_layer_attr_logic(self, vis: List[visualization.VisualizationDataRecord]):
         assert isinstance(vis, list), "vis must be an instance of list of VisualizationDataRecord..."
         html = visualization.visualize_text([*vis])
         path_to_captum_html = os.path.join(self.hparam.load_model_directory, "captum_figure.html")
