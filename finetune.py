@@ -424,6 +424,9 @@ class ProtBertClassifier(ProtBertClassifier):
             val_acc2 = balanced_accuracy_score(datay2, predy2)
             
             self.log("val_loss_mean", val_loss_mean, prog_bar=True)
+            self.log("epoch_val_acc0", val_acc0, prog_bar=True)
+            self.log("epoch_val_acc1", val_acc1, prog_bar=True)
+            self.log("epoch_val_acc2", val_acc2, prog_bar=True)
             self.log("epoch", self.current_epoch, prog_bar=True)
 
             tqdm_dict = {"epoch_val_loss": val_loss_mean, "epoch_val_acc0": val_acc0, "epoch_val_acc1": val_acc1, "epoch_val_acc2": val_acc2}
