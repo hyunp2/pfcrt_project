@@ -697,4 +697,4 @@ class ProtBertClassifier(ProtBertClassifier):
         return super().test_dataloader()
 
 
-# python -m train --ngpus "auto" --accelerator gpu --strategy none -b 8 --finetune -ckpt ckpt_for_finetune.ckpt --patience 100 --train_frac 0.8 --use_ce --aug
+# python -m train --ngpus "auto" --accelerator gpu --strategy none -b 16 --finetune -ckpt ckpt_for_finetune.ckpt --patience 100 --train_frac 0.8 --use_ce --aug
