@@ -34,7 +34,7 @@ class ModelAnalyzer(object):
         self.model = Model.ProtBertClassifier.load_from_checkpoint(checkpoint_path=os.path.join(hparam.load_model_directory, \
                                                                                                 hparam.load_model_checkpoint), hparam=hparam) \
                                                                                                 if not self.hparam.finetune \
-                                                                                                else FModel.ProtBertClassifier.load_from_checkpoint(checkpoint_path=os.path.join(hparam.load_model_directory, \
+                                                                                                else FModel.ProtBertClassifierFinetune.load_from_checkpoint(checkpoint_path=os.path.join(hparam.load_model_directory, \
                                                                                                 hparam.load_model_checkpoint), hparam=hparam)
         self.model.freeze()
         self.tokenizer = self.model.tokenizer
