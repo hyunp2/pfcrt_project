@@ -179,12 +179,14 @@ class ProtBertClassifierFinetune(ProtBertClassifier):
             loss1 = FocalLoss(beta=0.9999, weight=self.weight1) #(logits1, target1) #ignore_index=100 is from dataset!
             loss2 = FocalLoss(beta=0.9999, weight=self.weight2) #(logits2, target2) #ignore_index=100 is from dataset!
 #         return (loss0 + loss1 + loss2).mean()
-        loss = collections.namedtuple("loss", ["loss0_fn", "loss1_fn", "loss2_fn"])
-        loss.loss0_fn = loss0
-        loss.loss1_fn = loss1
-        loss.loss2_fn = loss2
-
-        self._loss = loss
+#         loss = collections.namedtuple("loss", ["loss0_fn", "loss1_fn", "loss2_fn"])
+#         loss.loss0_fn = loss0
+#         loss.loss1_fn = loss1
+#         loss.loss2_fn = loss2
+#         self._loss = loss
+        self.loss0 = loss0
+        self.loss1 = loss1
+        self.loss2 = loss2
 
     def __build_weight(self, nonuniform_weight=True):
         targets = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
@@ -314,7 +316,7 @@ class ProtBertClassifierFinetune(ProtBertClassifier):
 
     def loss(self, predictions: dict, targets: torch.Tensor) -> torch.tensor:
         if self.hparam.loss == "classification" and not self.ner:
-            loss0_fn, loss1_fn, loss2_fn = self._loss.loss0_fn, self._loss.loss1_fn, self._loss.loss2_fn
+            loss0_fn, loss1_fn, loss2_fn = self.loss0, self.loss1, self.loss2
             losses = loss0_fn(predictions["logits0"], targets["labels"][:,0].long())  + loss1_fn(predictions["logits1"], targets["labels"][:,1].long()) + loss2_fn(predictions["logits2"], targets["labels"][:,2].long())
             return losses.mean()
 #             return self._loss(predictions, targets, self.hparam, self.weight0, self.weight1, self.weight2) #Crossentropy ;; input: dict[(B,3);(B,3);(B,2)] target dict(B,3)
