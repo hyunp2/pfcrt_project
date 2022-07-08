@@ -32,7 +32,7 @@ def get_args():
     #Model related
     parser.add_argument('--load-model-directory', "-dirm", type=str, default="/Scr/hyunpark/DL_Sequence_Collab/pfcrt_project/output", help='This is where model is/will be located...')  
     parser.add_argument('--load-model-checkpoint', "-ckpt", type=str, default=None, help='which checkpoint...')  
-    parser.add_argument('--artifact-checkpoint', "-ackpt", type=str, default=None, \ 
+    parser.add_argument('--artifact-checkpoint', "-ackpt", type=str, default=None,  
                         help='name to save/load atfifact checkpoint..., this is the name of SAVED model (e.g. epoch=50-val_loss=20.ckpt) py PL')  
     parser.add_argument('--model-name', type=str, default='Rostlab/prot_bert', help='HUGGINGFACE Backbone model name card')
     parser.add_argument('--finetune', action="store_true")
