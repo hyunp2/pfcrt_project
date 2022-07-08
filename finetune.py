@@ -146,7 +146,7 @@ class ProtBertClassifier(ProtBertClassifier):
         if self.hparam.loss == "contrastive": 
             self.make_hook()
 
-        wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
+        self.wandb_run = wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
         wandb.watch(self.head)
 
     def make_hook(self, ):
@@ -501,6 +501,11 @@ class ProtBertClassifier(ProtBertClassifier):
         self.metric_acc0.reset()   
         self.metric_acc1.reset()   
         self.metric_acc2.reset()   
+        
+        artifact = wandb.Artifact(name="finetune", type="torch_model")
+        path_and_namd = os.path.join(self.hparam.load_model_directory, self.hparam.load_model_checkpoint)
+        artifact.add_file(str(path_and_name)) #which directory's file to add; when downloading it downloads directory/file
+        self.wandb_run.log_artifact(artifact)
 
     def on_predict_epoch_start(self, ):
         if self.hparam.loss == "classification":
