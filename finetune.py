@@ -157,7 +157,6 @@ class ProtBertClassifier(ProtBertClassifier):
  
     def __build_loss(self):
         """ Initializes the loss function/s. """
-        global loss_fn #fixes: AttributeError: Can't pickle local object 'ProtBertClassifier.__build_loss.<locals>.loss_fn'
         def loss_fn(predictions: dict, targets: dict):
             logits0 = predictions.get("logits0", 0)
             logits1 = predictions.get("logits1", 0)
@@ -178,7 +177,7 @@ class ProtBertClassifier(ProtBertClassifier):
                 loss1 = FocalLoss(beta=0.9999, weight=self.weight1)(logits1, target1) #ignore_index=100 is from dataset!
                 loss2 = FocalLoss(beta=0.9999, weight=self.weight2)(logits2, target2) #ignore_index=100 is from dataset!
             return (loss0 + loss1 + loss2).mean()
-        
+        global loss_fn #fixes: AttributeError: Can't pickle local object 'ProtBertClassifier.__build_loss.<locals>.loss_fn'
         self._loss = loss_fn
 
     def __build_weight(self, nonuniform_weight=True):
