@@ -28,6 +28,7 @@ import curtsies.fmtfuncs as cf
 from sklearn.metrics import balanced_accuracy_score
 import warnings
 import argparse
+import collections
 #https://github.com/HelloJocelynLu/t5chem/blob/main/t5chem/archived/MultiTask.py for more info
 
 # classifier.bert.pooler.dense.weight.requires_grad
@@ -178,7 +179,12 @@ class ProtBertClassifierFinetune(ProtBertClassifier):
             loss1 = FocalLoss(beta=0.9999, weight=self.weight1) #(logits1, target1) #ignore_index=100 is from dataset!
             loss2 = FocalLoss(beta=0.9999, weight=self.weight2) #(logits2, target2) #ignore_index=100 is from dataset!
 #         return (loss0 + loss1 + loss2).mean()
-        self._loss = [loss0, loss1, loss2]
+        loss = collections.namedtuple("loss", "loss0_fn", "loss1_fn", "loss2_fn")
+        loss.loss0_fn = loss0
+        loss.loss1_fn = loss1
+        loss.loss2_fn = loss2
+
+        self._loss = loss
 
     def __build_weight(self, nonuniform_weight=True):
         targets = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
