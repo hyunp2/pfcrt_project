@@ -309,9 +309,7 @@ class ProtBertClassifier(ProtBertClassifier):
     def loss(self, predictions: dict, targets: torch.Tensor) -> torch.tensor:
         if self.hparam.loss == "classification" and not self.ner:
             loss0_fn, loss1_fn, loss2_fn = self._loss
-            losses = loss0_fn(predictions["logits0"], targets["labels"][:,0].long()) \ 
-                            + loss1_fn(predictions["logits1"], targets["labels"][:,1].long()) \
-                            + loss2_fn(predictions["logits2"], targets["labels"][:,2].long())
+            losses = loss0_fn(predictions["logits0"], targets["labels"][:,0].long())  + loss1_fn(predictions["logits1"], targets["labels"][:,1].long()) + loss2_fn(predictions["logits2"], targets["labels"][:,2].long())
             return losses.mean()
 #             return self._loss(predictions, targets, self.hparam, self.weight0, self.weight1, self.weight2) #Crossentropy ;; input: dict[(B,3);(B,3);(B,2)] target dict(B,3)
 #         elif self.hparam.loss == "classification" and self.ner:
