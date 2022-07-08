@@ -58,7 +58,7 @@ class ProtBertClassifier(ProtBertClassifier):
 
         # build weights for CE loss
         _ = self.__build_weight(self.hparam.nonuniform_weight) 
-#         print(self.weight0, self.weight1, self.weight2)
+        print(self.weight0, self.weight1, self.weight2)
         
         # Loss criterion initialization.
         _ = self.__build_loss() if not self.ner else self.__build_model_ner()
