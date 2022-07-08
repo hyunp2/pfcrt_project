@@ -503,7 +503,7 @@ class ProtBertClassifier(ProtBertClassifier):
         self.metric_acc2.reset()   
         
         artifact = wandb.Artifact(name="finetune", type="torch_model")
-        path_and_namd = os.path.join(self.hparam.load_model_directory, self.hparam.load_model_checkpoint)
+        path_and_name = os.path.join(self.hparam.load_model_directory, self.hparam.load_model_checkpoint)
         artifact.add_file(str(path_and_name)) #which directory's file to add; when downloading it downloads directory/file
         self.wandb_run.log_artifact(artifact)
 
