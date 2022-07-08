@@ -89,7 +89,7 @@ def _main():
     # ------------------------
     # 1 INIT LIGHTNING MODEL
     # ------------------------
-    model = Model.ProtBertClassifier(hparams) if not hparams.finetune else FModel.ProtBertClassifier(hparams).load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams, strict=False )
+    model = Model.ProtBertClassifier(hparams) if not hparams.finetune else FModel.ProtBertClassifierFinetune(hparams).load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams, strict=False )
 
     # ------------------------
     # 2 INIT EARLY STOPPING
