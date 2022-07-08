@@ -179,7 +179,7 @@ class ProtBertClassifierFinetune(ProtBertClassifier):
             loss1 = FocalLoss(beta=0.9999, weight=self.weight1) #(logits1, target1) #ignore_index=100 is from dataset!
             loss2 = FocalLoss(beta=0.9999, weight=self.weight2) #(logits2, target2) #ignore_index=100 is from dataset!
 #         return (loss0 + loss1 + loss2).mean()
-        loss = collections.namedtuple("loss", "loss0_fn", "loss1_fn", "loss2_fn")
+        loss = collections.namedtuple("loss", ["loss0_fn", "loss1_fn", "loss2_fn"])
         loss.loss0_fn = loss0
         loss.loss1_fn = loss1
         loss.loss2_fn = loss2
