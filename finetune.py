@@ -159,29 +159,26 @@ class ProtBertClassifier(ProtBertClassifier):
     def __build_loss(self):
         """ Initializes the loss function/s. """
 #         global loss_fn #fixes: AttributeError: Can't pickle local object 'ProtBertClassifier.__build_loss.<locals>.loss_fn'
-        def loss_fn(predictions: dict, targets: dict, hparam: argparse.ArgumentParser, *weight_args):
-            logits0 = predictions.get("logits0", 0)
-            logits1 = predictions.get("logits1", 0)
-            logits2 = predictions.get("logits2", 0)
-            target0 = targets.get("labels", None)[:,0].to(logits0).long()
-            target1 = targets.get("labels", None)[:,1].to(logits0).long()
-            target2 = targets.get("labels", None)[:,2].to(logits0).long()
-            assert len(weight_args) == 3, "must pass three aurgmnents to weights..."
-            weight0, weight1, weight2 = weight_args
-            weight0 = weight0.to(logits0) #if self.hparam.nonuniform_weight else None
-            weight1 = weight1.to(logits0) #if self.hparam.nonuniform_weight else None
-            weight2 = weight2.to(logits0) #if self.hparam.nonuniform_weight else None
+#         def loss_fn(predictions: dict, targets: dict, hparam: argparse.ArgumentParser, *weight_args):
+#         logits0 = predictions.get("logits0", 0)
+#         logits1 = predictions.get("logits1", 0)
+#         logits2 = predictions.get("logits2", 0)
+#         target0 = targets.get("labels", None)[:,0].to(logits0).long()
+#         target1 = targets.get("labels", None)[:,1].to(logits0).long()
+#         target2 = targets.get("labels", None)[:,2].to(logits0).long()
+# #         assert len(weight_args) == 3, "must pass three aurgmnents to weights..."
+# #         weight0, weight1, weight2 = weight_args
 
-            if self.hparam.use_ce:
-                loss0 = nn.CrossEntropyLoss(label_smoothing=hparam.label_smoothing, ignore_index=hparam.fillna_val, weight=weight0)(logits0, target0) #ignore_index=100 is from dataset!
-                loss1 = nn.CrossEntropyLoss(label_smoothing=hparam.label_smoothing, ignore_index=hparam.fillna_val, weight=weight1)(logits1, target1) #ignore_index=100 is from dataset!
-                loss2 = nn.CrossEntropyLoss(label_smoothing=hparam.label_smoothing, ignore_index=hparam.fillna_val, weight=weight2)(logits2, target2) #ignore_index=100 is from dataset!
-            else:
-                loss0 = FocalLoss(beta=0.9999, weight=weight0)(logits0, target0) #ignore_index=100 is from dataset!
-                loss1 = FocalLoss(beta=0.9999, weight=weight1)(logits1, target1) #ignore_index=100 is from dataset!
-                loss2 = FocalLoss(beta=0.9999, weight=weight2)(logits2, target2) #ignore_index=100 is from dataset!
-            return (loss0 + loss1 + loss2).mean()
-        self._loss = loss_fn
+        if self.hparam.use_ce:
+            loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight0) #(logits0, target0) #ignore_index=100 is from dataset!
+            loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight1) #(logits1, target1) #ignore_index=100 is from dataset!
+            loss2 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight2) #(logits2, target2) #ignore_index=100 is from dataset!
+        else:
+            loss0 = FocalLoss(beta=0.9999, weight=self.weight0) #(logits0, target0) #ignore_index=100 is from dataset!
+            loss1 = FocalLoss(beta=0.9999, weight=self.weight1) #(logits1, target1) #ignore_index=100 is from dataset!
+            loss2 = FocalLoss(beta=0.9999, weight=self.weight2) #(logits2, target2) #ignore_index=100 is from dataset!
+#         return (loss0 + loss1 + loss2).mean()
+        self._loss = [loss0, loss1, loss2]
 
     def __build_weight(self, nonuniform_weight=True):
         targets = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
@@ -311,11 +308,16 @@ class ProtBertClassifier(ProtBertClassifier):
 
     def loss(self, predictions: dict, targets: torch.Tensor) -> torch.tensor:
         if self.hparam.loss == "classification" and not self.ner:
-            return self._loss(predictions, targets, self.hparam, self.weight0, self.weight1, self.weight2) #Crossentropy ;; input: dict[(B,3);(B,3);(B,2)] target dict(B,3)
-        elif self.hparam.loss == "classification" and self.ner:
-            return self._loss(predictions["logits"], targets["labels"].view(-1, self.num_labels)) #CRF ;; input (B,L,C) target (B,L) ;; B->num_frames & L->num_aa_residues & C->num_lipid_types
-        elif self.hparam.loss == "contrastive":
-            return self.compute_logits_CURL(predictions["logits"], predictions["logits"]) #Crossentropy -> Need second pred to be transformed! each pred is (B,z_dim) shape
+            loss0_fn, loss1_fn, loss2_fn = self._loss
+            losses = loss0_fn(predictions["logits0"], targets["labels"][:,0].long()) \ 
+                            + loss1_fn(predictions["logits1"], targets["labels"][:,1].long()) \
+                            + loss2_fn(predictions["logits2"], targets["labels"][:,2].long())
+            return losses.mean()
+#             return self._loss(predictions, targets, self.hparam, self.weight0, self.weight1, self.weight2) #Crossentropy ;; input: dict[(B,3);(B,3);(B,2)] target dict(B,3)
+#         elif self.hparam.loss == "classification" and self.ner:
+#             return self._loss(predictions["logits"], targets["labels"].view(-1, self.num_labels)) #CRF ;; input (B,L,C) target (B,L) ;; B->num_frames & L->num_aa_residues & C->num_lipid_types
+#         elif self.hparam.loss == "contrastive":
+#             return self.compute_logits_CURL(predictions["logits"], predictions["logits"]) #Crossentropy -> Need second pred to be transformed! each pred is (B,z_dim) shape
 
     def on_train_epoch_start(self, ) -> None:
         self.metric_acc0 = torchmetrics.Accuracy()
