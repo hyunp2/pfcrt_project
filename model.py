@@ -55,13 +55,16 @@ class ProtBertClassifier(pl.LightningModule):
         self.z_dim = self.hparam.z_dim #Add this!
         if self.hparam.loss == "contrastive": self.register_parameter("W", torch.nn.Parameter(torch.rand(self.z_dim, self.z_dim))) #CURL purpose
         
-        # build model
-        _ = self.__build_model() if not self.ner else self.__build_model_ner()
+        if not self.hparam.finetune:
+            # build model
+            _ = self.__build_model() if not self.ner else self.__build_model_ner()
 
-        # Loss criterion initialization.
-        _ = self.__build_loss() if not self.ner else self.__build_model_ner()
+            # Loss criterion initialization.
+            _ = self.__build_loss() if not self.ner else self.__build_model_ner()
 
-        self.freeze_encoder()
+            self.freeze_encoder()
+        else:
+            pass
 
     def __build_model(self) -> None:
         """ Init BERT model + tokenizer + classification head."""
