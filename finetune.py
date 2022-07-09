@@ -29,6 +29,7 @@ from sklearn.metrics import balanced_accuracy_score
 import warnings
 import argparse
 import collections
+import torch.distributed as dist
 #https://github.com/HelloJocelynLu/t5chem/blob/main/t5chem/archived/MultiTask.py for more info
 
 # classifier.bert.pooler.dense.weight.requires_grad
