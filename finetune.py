@@ -358,7 +358,7 @@ class ProtBertClassifierFinetune(ProtBertClassifier):
         dataY = np.stack([y0.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1)]).T #data,3
 
         output = {"train_loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2} #NEVER USE ORDEREDDICT!!!!
-        wandb.log(output)
+        self.wandb_run.log(output)
 #         self.log("train_loss", loss_train, prog_bar=True)
 #         self.log("train_acc0", train_acc0, prog_bar=True)
 #         self.log("train_acc1", train_acc1, prog_bar=True)
@@ -381,7 +381,7 @@ class ProtBertClassifierFinetune(ProtBertClassifier):
         self.log("train_loss_mean", train_loss_mean, prog_bar=True)
 
         tqdm_dict = {"epoch_train_loss": train_loss_mean, "epoch_train_acc0": train_acc0, "epoch_train_acc1": train_acc1, "epoch_train_acc2": train_acc2}
-        wandb.log(tqdm_dict)
+        self.wandb_run.log(tqdm_dict)
         
         self.metric_acc0.reset()   
         self.metric_acc1.reset()   
@@ -424,7 +424,7 @@ class ProtBertClassifierFinetune(ProtBertClassifier):
         output = {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2} #NEVER USE ORDEREDDICT!!!!
         self.log("val_loss", loss_val, prog_bar=True)
 
-        wandb.log(output)
+        self.wandb_run.log(output)
 
         return {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2, "predY": predY, "dataY": dataY} #NEVER USE ORDEREDDICT!!!!
 
@@ -450,7 +450,7 @@ class ProtBertClassifierFinetune(ProtBertClassifier):
 
             tqdm_dict = {"epoch_val_loss": val_loss_mean, "epoch_val_acc0": val_acc0, "epoch_val_acc1": val_acc1, "epoch_val_acc2": val_acc2}
 
-            wandb.log(tqdm_dict)
+            self.wandb_run.log(tqdm_dict)
             self.metric_acc0.reset()   
             self.metric_acc1.reset()   
             self.metric_acc2.reset()   
@@ -490,7 +490,7 @@ class ProtBertClassifierFinetune(ProtBertClassifier):
         output = {"test_loss": loss_test, "test_acc0": test_acc0, "test_acc1": test_acc1, "test_acc2": test_acc2} #NEVER USE ORDEREDDICT!!!!
 #         self.log("test_loss", loss_test, prog_bar=True)
 
-        wandb.log(output)
+        self.wandb_run.log(output)
         
         return {"test_loss": loss_test, "test_acc0": test_acc0, "test_acc1": test_acc1, "test_acc2": test_acc2, "predY": predY, "dataY": dataY}
 
@@ -508,7 +508,7 @@ class ProtBertClassifierFinetune(ProtBertClassifier):
         self.log("test_loss_mean", test_loss_mean, prog_bar=True)
         tqdm_dict = {"epoch_test_loss": test_loss_mean, "epoch_test_acc0": test_acc0, "epoch_test_acc1": test_acc1, "epoch_test_acc2": test_acc2}
         
-        wandb.log(tqdm_dict)
+        self.wandb_run.log(tqdm_dict)
         self.metric_acc0.reset()   
         self.metric_acc1.reset()   
         self.metric_acc2.reset()   
@@ -562,14 +562,14 @@ class ProtBertClassifierFinetune(ProtBertClassifier):
             y_true=ground_truth,
             preds=predictions,
             class_names=class_names) 
-        wandb.log({"Confusion Matrix": cm}) #Needs (B, )
+        self.wandb_run.log({"Confusion Matrix": cm}) #Needs (B, )
         
         disp = RocCurveDisplay.from_predictions(ground_truth, predictions)
         fig = disp.figure_
-        wandb.log({"ROC": fig}) #Needs (B/BL,num_labels)
+        self.wandb_run.log({"ROC": fig}) #Needs (B/BL,num_labels)
         disp = PrecisionRecallDisplay.from_predictions(ground_truth, predictions)
         fig = disp.figure_
-        wandb.log({"PR": fig}) #Needs (B/BL,num_labels)
+        self.wandb_run.log({"PR": fig}) #Needs (B/BL,num_labels)
 #         disp = CalibrationDisplay.from_predictions(ground_truth, predictions)
 #         fig = disp.figure_
 #         wandb.log({"Calibration": fig}) #Needs (B/BL,num_labels)
@@ -587,7 +587,7 @@ class ProtBertClassifierFinetune(ProtBertClassifier):
         fig.write_html(path_to_plotly_html, auto_play = False)
         table = wandb.Table(columns = ["plotly_figure"])
         table.add_data(wandb.Html(path_to_plotly_html))
-        wandb.log({"TSNE Plot": table})
+        self.wandb_run.log({"TSNE Plot": table})
 
     @staticmethod
     def plot_ngl(hparam: argparse.ArgumentParser):
@@ -605,7 +605,7 @@ class ProtBertClassifierFinetune(ProtBertClassifier):
         nv.write_html(path_to_ngl_html, [w])     
         table = wandb.Table(columns = ["nglview_figure"])
         table.add_data(wandb.Html(path_to_ngl_html))
-        wandb.log({"NGL View": table}) 
+        self.wandb_run.log({"NGL View": table}) 
 
     def configure_optimizers(self):
         """ Sets different Learning rates for different parameter groups. """
