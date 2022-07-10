@@ -30,6 +30,8 @@ import warnings
 import argparse
 import collections
 import torch.distributed as dist
+import pygad
+from pygad import torchga
 #https://github.com/HelloJocelynLu/t5chem/blob/main/t5chem/archived/MultiTask.py for more info
 
 # classifier.bert.pooler.dense.weight.requires_grad
@@ -152,6 +154,44 @@ class ProtBertClassifierFinetune(ProtBertClassifier):
         self.wandb_run = wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
         wandb.watch(self.head)
 
+    def fitness_GA(self, solution, solution_idx):
+        train_dl = self.train_dataloader()
+        acc0, acc1, acc2 = 0, 0, 0
+        for batch in train_dl:
+            inputs, targets = batch
+            model_out = self.forward(**inputs)
+            #print(model_out.size(), targets["labels"].size())
+            loss_train = self.loss(model_out, targets)
+
+            y = targets["labels"].view(-1,3) #B3
+            y0 = y[:,0]
+            y1 = y[:,1]
+            y2 = y[:,2]
+            y_hat0 = model_out["logits0"] #(B,3);(B,3),(B,2)
+            y_hat1 = model_out["logits1"] #(B,3);(B,3),(B,2)
+            y_hat2 = model_out["logits2"] #(B,3);(B,3),(B,2)
+            labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y)
+            labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
+            labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
+
+            train_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
+            train_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
+            train_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
+            
+            acc0 += train_acc0
+            acc1 += train_acc1
+            acc2 += train_acc2
+        acc0 /= len(train_dl)
+        acc1 /= len(train_dl)
+        acc2 /= len(train_dl)
+        fitness = np.mean([acc0, acc1, acc2])
+        return fitness
+    
+    def execute_GA():
+        torch_ga = torchga.TorchGA(model=model,
+                           num_solutions=10)
+        pass
+        
     def make_hook(self, ):
         self.fhook = dict()
         def hook(m, i, o):
