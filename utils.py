@@ -124,7 +124,7 @@ class ModelAnalyzer(object):
 
     def _visualize_layer_attr_logic(self, vis: List[visualization.VisualizationDataRecord]):
         assert isinstance(vis, list), "vis must be an instance of list of VisualizationDataRecord..."
-        html = visualization.visualize_text([*vis])
+        html = visualization.visualize_text([*vis]) #one or multple sequence visualization!!
         path_to_captum_html = os.path.join(self.hparam.load_model_directory, "captum_figure.html")
         data = html.data
         with open(path_to_captum_html, 'w') as f:
