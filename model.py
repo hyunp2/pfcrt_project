@@ -1,5 +1,6 @@
 import torch
-import pytorch_lightning as pl
+# import pytorch_lightning as pl
+import lightning as L
 import transformers
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,7 +32,7 @@ logging.basicConfig()
 logger = logging.getLogger("BERT Fine-tuning")
 logger.setLevel(logging.DEBUG)
 
-class ProtBertClassifier(pl.LightningModule):
+class ProtBertClassifier(L.LightningModule):
     """
     # https://github.com/minimalist-nlp/lightning-text-classification.git
     
