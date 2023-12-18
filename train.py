@@ -1,5 +1,6 @@
 import torch
-import pytorch_lightning as pl
+# import pytorch_lightning as pl
+import lightning as L
 import transformers
 import numpy as np
 import matplotlib.pyplot as plt
@@ -84,7 +85,7 @@ def get_args():
 def _main():
     hparams = get_args()
 
-    pl.seed_everything(hparams.seed)
+    L.seed_everything(hparams.seed)
 
     # ------------------------
     # 1 INIT LIGHTNING MODEL
@@ -94,7 +95,7 @@ def _main():
     # ------------------------
     # 2 INIT EARLY STOPPING
     # ------------------------
-    early_stop_callback = pl.callbacks.EarlyStopping(
+    early_stop_callback = L.pytorch.callbacks.EarlyStopping(
     monitor=hparams.monitor,
     min_delta=0.0,
     patience=hparams.patience,
@@ -106,7 +107,7 @@ def _main():
     # 3 INIT MODEL CHECKPOINT CALLBACK
     #  -------------------------------
     # initialize Model Checkpoint Saver
-    checkpoint_callback = pl.callbacks.ModelCheckpoint(
+    checkpoint_callback = L.pytorch.callbacks.ModelCheckpoint(
     filename="{epoch}-{val_loss_mean:.2f}",
     save_top_k=hparams.save_top_k,
     verbose=True,
@@ -120,27 +121,27 @@ def _main():
     # 4 INIT SWA CALLBACK
     #  -------------------------------
     # Stochastic Weight Averaging
-    swa_callback = pl.callbacks.StochasticWeightAveraging(swa_epoch_start=0.8, swa_lrs=None, annealing_epochs=10, annealing_strategy='cos', avg_fn=None)
+    swa_callback = L.pytorch.callbacks.StochasticWeightAveraging(swa_epoch_start=0.8, swa_lrs=None, annealing_epochs=10, annealing_strategy='cos', avg_fn=None)
 
     # --------------------------------
     # 5 INIT SWA CALLBACK
     #  -------------------------------
     # Stochastic Weight Averaging
-    #rsummary_callback = pl.callbacks.RichModelSummary() #Not in this PL version
+    #rsummary_callback = L.callbacks.RichModelSummary() #Not in this PL version
 
     # --------------------------------
     # 6 INIT MISC CALLBACK
     #  -------------------------------
     # MISC
-#     progbar_callback = pl.callbacks.ProgressBar()
-    timer_callback = pl.callbacks.Timer()
-    tqdmbar_callback = pl.callbacks.TQDMProgressBar()
+#     progbar_callback = L.callbacks.ProgressBar()
+    timer_callback = L.pytorch.callbacks.Timer()
+    tqdmbar_callback = L.pytorch.callbacks.TQDMProgressBar()
 
     # ------------------------
     # N INIT TRAINER
     # ------------------------
-#     tb_logger = pl.loggers.TensorBoardLogger("tb_logs", name="my_model")
-    csv_logger = pl.loggers.CSVLogger(save_dir=hparams.load_model_directory)
+#     tb_logger = L.loggers.TensorBoardLogger("tb_logs", name="my_model")
+    csv_logger = L.pytorch.loggers.CSVLogger(save_dir=hparams.load_model_directory)
 #     plugins = DDPPlugin(find_unused_parameters=False) if hparams.accelerator == "ddp" else None
     
     
@@ -157,7 +158,7 @@ def _main():
     if hparams.strategy in ["none", None]:
         hparams.strategy = None
         
-    trainer = pl.Trainer(
+    trainer = L.Trainer(
         logger=[csv_logger],
         max_epochs=hparams.max_epochs,
         min_epochs=hparams.min_epochs,
