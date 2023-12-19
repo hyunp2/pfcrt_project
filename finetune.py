@@ -45,7 +45,7 @@ warnings.simplefilter("ignore")
 
 class ProtBertClassifierFinetune(L.LightningModule):
     def __init__(self, hparam: argparse.ArgumentParser) -> None:
-        super(ProtBertClassifierFinetune, self).__init__(hparam=hparam)
+        super(ProtBertClassifierFinetune, self).__init__()
         parser = DataParser.get_data("pfcrt.csv")
         data = parser.data
         data_trunc = parser.select_columns(fill_na=self.hparam.fillna_val)
