@@ -43,7 +43,7 @@ logger = logging.getLogger("BERT Fine-tuning")
 logger.setLevel(logging.DEBUG)
 warnings.simplefilter("ignore")
 
-class ProtBertClassifierFinetune(ProtBertClassifier):
+class ProtBertClassifierFinetune(L.LightningModule):
     def __init__(self, hparam: argparse.ArgumentParser) -> None:
         super(ProtBertClassifierFinetune, self).__init__(hparam=hparam)
         parser = DataParser.get_data("pfcrt.csv")
