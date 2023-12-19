@@ -5,7 +5,7 @@ import transformers
 import numpy as np
 import matplotlib.pyplot as plt
 import pdb
-from bertviz.bertviz import head_view
+from bertviz import head_view
 from transformers import BertTokenizer, BertModel, AutoModel, AutoTokenizer, BertConfig, BertForSequenceClassification
 from transformers.modeling_outputs import BaseModelOutputWithPoolingAndCrossAttentions
 from packaging import version
