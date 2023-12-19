@@ -22,6 +22,7 @@ import model as Model
 import finetune as FModel
 import dataset as dl
 from typing import *
+import pathlib
 
 
 #https://github.com/HelloJocelynLu/t5chem/blob/main/t5chem/archived/MultiTask.py for more info
@@ -157,7 +158,9 @@ def _main():
         
     if hparams.strategy in ["none", None]:
         hparams.strategy = None
-        
+
+    pathlib.Path(hparams.load_model_directory).mkdir(exist_ok=True)
+    
     trainer = L.Trainer(
         logger=[csv_logger],
         max_epochs=hparams.max_epochs,
@@ -185,5 +188,6 @@ if __name__ == "__main__":
     #python -m train --ngpus "auto" --accelerator gpu --strategy ddp -b 512 
     #CUDA_VISIBLE_DEVICES=0 python -m train -ls 0.1 -b 8 --ngpus "auto" --accelerator gpu --strategy none --finetune -ckpt ckpt_for_finetune.ckpt
     #python -m train --ngpus "auto" --accelerator gpu --strategy ddp -b 512 
-    
-#     python -m train --ngpus "auto" --accelerator gpu --strategy none -b 8 --finetune -ckpt ckpt_for_finetune.ckpt --use_ce --nonuniform_weight
+    #python -m train --ngpus "auto" --accelerator gpu --strategy none -b 8 --finetune -ckpt ckpt_for_finetune.ckpt --use_ce --nonuniform_weight
+
+    #[Dec 19th 2023] python -m train --ngpus "auto" --accelerator gpu --strategy none -b 8 
