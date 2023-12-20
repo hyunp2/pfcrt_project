@@ -176,7 +176,6 @@ def _main():
         devices=hparams.ngpus,
         strategy=hparams.strategy,
         accelerator=hparams.accelerator,
-        auto_select_gpus=True
     )
 
     trainer.fit(model, ckpt_path=resume_ckpt) #New API!
