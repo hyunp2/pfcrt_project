@@ -40,7 +40,7 @@ def get_args():
     parser.add_argument('--finetune', action="store_true")
 
     #Molecule (Dataloader) related
-    parser.add_argument('--load-data-directory', "-dird", default="/Scr/hyunpark/DL_Sequence_Collab/data", help='This is where data is located...')  
+    parser.add_argument('--load-data-directory', "-dird", default="data", help='This is where data is located...')  
     parser.add_argument('--dataset', type=str, default="yarongef/human_proteome_triplets", help='pass dataset...')  
 
     #Optimizer related
