@@ -4,5 +4,5 @@
 
 # Run to train
 ```bash
-python -m main --ngpus "auto" --accelerator gpu --strategy none -b 8
+git pull && python -m main --ngpus "auto" --accelerator gpu --strategy none -b 8
 ```
