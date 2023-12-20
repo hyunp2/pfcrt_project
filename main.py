@@ -167,7 +167,6 @@ def _main():
         min_epochs=hparams.min_epochs,
         callbacks = [early_stop_callback, checkpoint_callback, swa_callback, tqdmbar_callback, timer_callback],
         precision=hparams.precision,
-        amp_backend=hparams.amp_backend,
         deterministic=False,
         default_root_dir=hparams.load_model_directory,
         num_sanity_val_steps = hparams.sanity_checks,
