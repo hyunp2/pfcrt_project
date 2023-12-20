@@ -336,7 +336,7 @@ class ProtBertClassifier(L.LightningModule):
 
         return {"loss": loss_train, "train_acc": train_acc}
 
-    def training_epoch_end(self, outputs: list) -> dict:
+    def on_train_epoch_end(self, outputs: list) -> dict:
         """ Function that takes as input a list of dictionaries returned by the validation_step
         function and measures the model performance accross the entire validation set.
         
@@ -382,7 +382,7 @@ class ProtBertClassifier(L.LightningModule):
 
         return output
         
-    def validation_epoch_end(self, outputs: list) -> dict:
+    def on_validation_epoch_end(self, outputs: list) -> dict:
         """ Function that takes as input a list of dictionaries returned by the validation_step
         function and measures the model performance accross the entire validation set.
         
