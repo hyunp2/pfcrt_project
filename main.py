@@ -122,7 +122,7 @@ def _main():
     # 4 INIT SWA CALLBACK
     #  -------------------------------
     # Stochastic Weight Averaging
-    swa_callback = L.pytorch.callbacks.StochasticWeightAveraging(swa_epoch_start=0.8, swa_lrs=None, annealing_epochs=10, annealing_strategy='cos', avg_fn=None)
+    swa_callback = L.pytorch.callbacks.StochasticWeightAveraging(swa_epoch_start=0.8, swa_lrs=0.001, annealing_epochs=10, annealing_strategy='cos', avg_fn=None)
 
     # --------------------------------
     # 5 INIT SWA CALLBACK
