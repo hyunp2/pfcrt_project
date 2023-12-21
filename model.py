@@ -124,7 +124,7 @@ class ProtBertClassifier(L.LightningModule):
  
     def __build_loss(self):
         """ Initializes the loss function/s. """
-        self._loss = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing)
+        self._loss = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing) if self.num_labels > 2 else nn.BCEWithLogitsLoss()
 
     def __build_loss_ner(self):
         """ Initializes the loss function/s. """
@@ -281,7 +281,10 @@ class ProtBertClassifier(L.LightningModule):
             torch.tensor with loss value.
         """
         if self.hparam.loss == "classification" and not self.ner:
-            return self._loss(predictions["logits"], targets["labels"].view(-1, )) #Crossentropy ;; input: (B,2) target (B,)
+            if self.num_labels > 2:
+                return self._loss(predictions["logits"], targets["labels"].view(-1, )) #Crossentropy ;; input: (B,2) target (B,)
+            else:
+                return self._loss(predictions["logits"].amax(dim=-1).view(-1, ), targets["labels"].view(-1, )) #BinaryCrossentropy ;; input: (B,) target (B,)
         elif self.hparam.loss == "classification" and self.ner:
             return self._loss(predictions["logits"], targets["labels"].view(-1, self.num_labels)) #CRF ;; input (B,L,C) target (B,L) ;; B->num_frames & L->num_aa_residues & C->num_lipid_types
         elif self.hparam.loss == "contrastive":
@@ -304,7 +307,7 @@ class ProtBertClassifier(L.LightningModule):
 
     #     return inputs, sample[]
     def on_train_epoch_start(self, ) -> None:
-        self.metric_acc = torchmetrics.Accuracy()
+        self.metric_acc = torchmetrics.Accuracy(tast="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(tast="binary")
         #self.loss_log_for_train = []
 
     def training_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
@@ -358,7 +361,7 @@ class ProtBertClassifier(L.LightningModule):
         self.metric_acc.reset()    
 
     def on_validation_epoch_start(self, ) -> None:
-        self.metric_acc = torchmetrics.Accuracy()
+        self.metric_acc = torchmetrics.Accuracy(tast="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(tast="binary")
 
     def validation_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
         """ Similar to the training step but with the model in eval mode.
@@ -405,7 +408,7 @@ class ProtBertClassifier(L.LightningModule):
             self.metric_acc.reset()   
 
     def on_test_epoch_start(self, ) -> None:
-        self.metric_acc = torchmetrics.Accuracy()
+        self.metric_acc = torchmetrics.Accuracy(tast="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(tast="binary")
 
     def test_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
         """ Similar to the training step but with the model in eval mode.
