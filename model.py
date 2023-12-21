@@ -307,7 +307,7 @@ class ProtBertClassifier(L.LightningModule):
 
     #     return inputs, sample[]
     def on_train_epoch_start(self, ) -> None:
-        self.metric_acc = torchmetrics.Accuracy(tast="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(tast="binary")
+        self.metric_acc = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         #self.loss_log_for_train = []
 
     def training_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
@@ -361,7 +361,7 @@ class ProtBertClassifier(L.LightningModule):
         self.metric_acc.reset()    
 
     def on_validation_epoch_start(self, ) -> None:
-        self.metric_acc = torchmetrics.Accuracy(tast="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(tast="binary")
+        self.metric_acc = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
 
     def validation_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
         """ Similar to the training step but with the model in eval mode.
@@ -408,7 +408,7 @@ class ProtBertClassifier(L.LightningModule):
             self.metric_acc.reset()   
 
     def on_test_epoch_start(self, ) -> None:
-        self.metric_acc = torchmetrics.Accuracy(tast="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(tast="binary")
+        self.metric_acc = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
 
     def test_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
         """ Similar to the training step but with the model in eval mode.
