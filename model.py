@@ -362,6 +362,7 @@ class ProtBertClassifier(L.LightningModule):
 
     def on_validation_epoch_start(self, ) -> None:
         self.metric_acc = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.val_outputs = []
 
     def validation_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
         """ Similar to the training step but with the model in eval mode.
