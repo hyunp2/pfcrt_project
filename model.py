@@ -284,7 +284,7 @@ class ProtBertClassifier(L.LightningModule):
             if self.num_labels > 2:
                 return self._loss(predictions["logits"], targets["labels"].view(-1, )) #Crossentropy ;; input: (B,2) target (B,)
             else:
-                return self._loss(predictions["logits"].amax(dim=-1).view(-1, ), targets["labels"].view(-1, )) #BinaryCrossentropy ;; input: (B,) target (B,)
+                return self._loss(predictions["logits"].amax(dim=-1).view(-1, ), targets["labels"].view(-1, ).to(torch.float32)) #BinaryCrossentropy ;; input: (B,) target (B,)
         elif self.hparam.loss == "classification" and self.ner:
             return self._loss(predictions["logits"], targets["labels"].view(-1, self.num_labels)) #CRF ;; input (B,L,C) target (B,L) ;; B->num_frames & L->num_aa_residues & C->num_lipid_types
         elif self.hparam.loss == "contrastive":
