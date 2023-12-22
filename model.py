@@ -13,7 +13,8 @@ import torch.nn as nn
 import logging
 import torchmetrics
 import wandb 
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
+import collections
 from torch import optim
 from torch.utils.data import DataLoader
 import dataset as dl
