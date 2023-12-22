@@ -401,6 +401,8 @@ class ProtBertClassifier(L.LightningModule):
             - Dictionary with metrics to be added to the lightning logger.  
         """
         if not self.trainer.sanity_checking:
+            if not isinstance(self.val_outputs["val_loss"], list):
+                self.val_outputs["val_loss"] = [ self.val_outputs["val_loss"] ]
             # val_loss_mean = torch.stack([x['val_loss'] for x in self.val_outputs]).mean()
             val_loss_mean = torch.cat(self.val_outputs["val_loss"], dim=0).to(self.device)
             # val_acc_mean = torch.stack([x['val_acc'] for x in outputs]).mean()
@@ -450,6 +452,8 @@ class ProtBertClassifier(L.LightningModule):
         Returns:
             - Dictionary with metrics to be added to the lightning logger.  
         """
+        if not isinstance(self.test_outputs["test_loss"], list):
+            self.test_outputs["test_loss"] = [ self.test_outputs["test_loss"] ]
         # test_loss_mean = torch.stack([x['test_loss'] for x in self.test_outputs]).mean()
         test_loss_mean = torch.cat(self.test_outputs["test_loss"], dim=0).to(self.device)
 #         test_acc_mean = self.metric_acc.compute()
