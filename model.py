@@ -13,7 +13,7 @@ import torch.nn as nn
 import logging
 import torchmetrics
 import wandb 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from torch import optim
 from torch.utils.data import DataLoader
 import dataset as dl
@@ -308,7 +308,7 @@ class ProtBertClassifier(L.LightningModule):
     #     return inputs, sample[]
     def on_train_epoch_start(self, ) -> None:
         self.metric_acc = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        #self.loss_log_for_train = []
+        self.train_outputs = collections.defaultdict(list)
 
     def training_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
         """ 
@@ -334,12 +334,14 @@ class ProtBertClassifier(L.LightningModule):
         wandb.log(output)
         self.log("train_loss", loss_train, prog_bar=True)
         self.log("train_acc", train_acc, prog_bar=True)
-        
+                
+        self.train_outputs["train_acc"].append(train_acc)
+
         #self.loss_log_for_train.append({"train_acc": train_acc})
 
         return {"loss": loss_train, "train_acc": train_acc}
 
-    def on_train_epoch_end(self, outputs: list) -> dict:
+    def on_train_epoch_end(self, ) -> dict:
         """ Function that takes as input a list of dictionaries returned by the validation_step
         function and measures the model performance accross the entire validation set.
         
@@ -347,7 +349,8 @@ class ProtBertClassifier(L.LightningModule):
             - Dictionary with metrics to be added to the lightning logger.  
         """
         #outputs = self.loss_log_for_train
-        train_loss_mean = torch.stack([x['train_acc'] for x in outputs]).mean()
+        # train_loss_mean = torch.stack([x['train_acc'] for x in self.train_outputs]).mean()
+        train_loss_mean = torch.cat(self.train_outputs["train_acc"], dim=0).to(self.device)
 #         train_acc_mean = self.metric_acc.compute()
 
 #         self.log("train_loss_mean", train_loss_mean, prog_bar=True)
@@ -362,7 +365,7 @@ class ProtBertClassifier(L.LightningModule):
 
     def on_validation_epoch_start(self, ) -> None:
         self.metric_acc = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        self.val_outputs = []
+        self.val_outputs = collections.defaultdict(list)
 
     def validation_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
         """ Similar to the training step but with the model in eval mode.
@@ -384,9 +387,11 @@ class ProtBertClassifier(L.LightningModule):
         output = {"val_loss": loss_val, "val_acc": val_acc} #NEVER USE ORDEREDDICT!!!!
         wandb.log(output)
 
+        self.val_outputs["val_loss"].append(loss_val)
+        
         return output
         
-    def on_validation_epoch_end(self, outputs: list) -> dict:
+    def on_validation_epoch_end(self, ) -> dict:
         """ Function that takes as input a list of dictionaries returned by the validation_step
         function and measures the model performance accross the entire validation set.
         
@@ -394,7 +399,8 @@ class ProtBertClassifier(L.LightningModule):
             - Dictionary with metrics to be added to the lightning logger.  
         """
         if not self.trainer.sanity_checking:
-            val_loss_mean = torch.stack([x['val_loss'] for x in outputs]).mean()
+            # val_loss_mean = torch.stack([x['val_loss'] for x in self.val_outputs]).mean()
+            val_loss_mean = torch.cat(self.val_outputs["val_loss"], dim=0).to(self.device)
             # val_acc_mean = torch.stack([x['val_acc'] for x in outputs]).mean()
 #             val_acc_mean = self.metric_acc.compute()
  
@@ -410,6 +416,7 @@ class ProtBertClassifier(L.LightningModule):
 
     def on_test_epoch_start(self, ) -> None:
         self.metric_acc = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.test_outputs = collections.defaultdict(list)
 
     def test_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
         """ Similar to the training step but with the model in eval mode.
@@ -430,16 +437,19 @@ class ProtBertClassifier(L.LightningModule):
         wandb.log(output)
         self.log("test_acc", test_acc, prog_bar=True)
 
+        self.test_outputs["test_loss"].append(loss_test)
+        
         return output
 
-    def test_epoch_end(self, outputs: list) -> dict:
+    def test_epoch_end(self, ) -> dict:
         """ Function that takes as input a list of dictionaries returned by the validation_step
         function and measures the model performance accross the entire validation set.
         
         Returns:
             - Dictionary with metrics to be added to the lightning logger.  
         """
-        test_loss_mean = torch.stack([x['test_loss'] for x in outputs]).mean()
+        # test_loss_mean = torch.stack([x['test_loss'] for x in self.test_outputs]).mean()
+        test_loss_mean = torch.cat(self.test_outputs["test_loss"], dim=0).to(self.device)
 #         test_acc_mean = self.metric_acc.compute()
 #         tqdm_dict = {"epoch_test_loss": test_loss_mean, "epoch_test_acc": test_acc_mean}
         tqdm_dict = {"epoch_test_loss": test_loss_mean}
