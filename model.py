@@ -387,6 +387,7 @@ class ProtBertClassifier(L.LightningModule):
 
         output = {"val_loss": loss_val, "val_acc": val_acc} #NEVER USE ORDEREDDICT!!!!
         wandb.log(output)
+        self.log("val_loss", loss_val, prog_bar=True)
 
         self.val_outputs["val_loss"].append(loss_val)
         
