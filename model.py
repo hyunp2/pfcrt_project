@@ -351,7 +351,7 @@ class ProtBertClassifier(L.LightningModule):
         """
         #outputs = self.loss_log_for_train
         # train_loss_mean = torch.stack([x['train_acc'] for x in self.train_outputs]).mean()
-        train_loss_mean = torch.cat(self.train_outputs["train_acc"], dim=0).to(self.device)
+        train_loss_mean = torch.stack(self.train_outputs["train_acc"], dim=0).to(self.device).mean()
 #         train_acc_mean = self.metric_acc.compute()
 
 #         self.log("train_loss_mean", train_loss_mean, prog_bar=True)
@@ -402,7 +402,7 @@ class ProtBertClassifier(L.LightningModule):
         """
         if not self.trainer.sanity_checking:
             # val_loss_mean = torch.stack([x['val_loss'] for x in self.val_outputs]).mean()
-            val_loss_mean = torch.stack(self.val_outputs["val_loss"], dim=0).to(self.device)
+            val_loss_mean = torch.stack(self.val_outputs["val_loss"], dim=0).to(self.device).mean()
             # val_acc_mean = torch.stack([x['val_acc'] for x in outputs]).mean()
 #             val_acc_mean = self.metric_acc.compute()
  
@@ -451,7 +451,7 @@ class ProtBertClassifier(L.LightningModule):
             - Dictionary with metrics to be added to the lightning logger.  
         """
         # test_loss_mean = torch.stack([x['test_loss'] for x in self.test_outputs]).mean()
-        test_loss_mean = torch.stack(self.test_outputs["test_loss"], dim=0).to(self.device)
+        test_loss_mean = torch.stack(self.test_outputs["test_loss"], dim=0).to(self.device).mean()
 #         test_acc_mean = self.metric_acc.compute()
 #         tqdm_dict = {"epoch_test_loss": test_loss_mean, "epoch_test_acc": test_acc_mean}
         tqdm_dict = {"epoch_test_loss": test_loss_mean}
