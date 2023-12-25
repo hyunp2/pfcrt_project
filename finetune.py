@@ -50,13 +50,19 @@ class ProtBertClassifier(L.LightningModule):
         self.batch_size = self.hparam.batch_size
         self.model_name = self.hparam.model_name #"Rostlab/prot_bert_bfd"  
         self.ner = self.hparam.ner #bool
-        self.dataset = load_dataset(hparam.dataset, cache_dir=hparam.load_data_directory) #switch to a dataset!
+        
         self.num_labels = np.unique(self.dataset["train"]["label"]).__len__() #2 for Filippo; many for Matt 
-#         self.num_labels = 2
-        # self.metric_acc = torchmetrics.Accuracy()
+
         self.z_dim = self.hparam.z_dim #Add this!
         if self.hparam.loss == "contrastive": self.register_parameter("W", torch.nn.Parameter(torch.rand(self.z_dim, self.z_dim))) #CURL purpose
-        
+
+        ###FINETUNE OPTIONS 1 (loss weight, dataset)
+        self.ce_loss_weight_initialized = False
+        parser = DataParser.get_data("pfcrt.xlsx")
+        data_trunc = parser.select_columns(fill_na=self.hparam.fillna_val)
+        self.dataset = data_trunc
+
+        ###FINETUNE OPTIONS 2 (finetune classfication)
         if not self.hparam.finetune:
             # build model
             _ = self.__build_model() if not self.ner else self.__build_model_ner()
@@ -66,8 +72,12 @@ class ProtBertClassifier(L.LightningModule):
 
             self.freeze_encoder()
         else:
+            # build model
             _ = self.__build_model_finetune() if not self.ner else self.__build_model_ner()
+            
+            # Loss criterion initialization.
             _ = self.__build_loss_finetune() if not self.ner else self.__build_model_ner()
+            
             self.freeze_encoder()
 
     def __build_model(self) -> None:
@@ -178,45 +188,6 @@ class ProtBertClassifier(L.LightningModule):
         def hook(m, i, o):
             self.fhook["encoded_feats"] = o #(B,1024)
         self.fhook_handle = self.head[0].register_forward_hook(hook) #Call Forward hook with "model.fhook["encoded_feats"]" of (B,C); for NER, it is (B,L,C)
- 
-    def __build_loss(self):
-        """ Initializes the loss function/s. """
-        self._loss = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing) if self.num_labels > 2 else nn.BCEWithLogitsLoss()
-
-    def __build_loss_ner(self):
-        """ Initializes the loss function/s. """
-        self._loss = CRF(num_tags=self.num_labels, batch_first=True)
-
-    def __build_loss(self):
-        """ Initializes the loss function/s. """
-#         global loss_fn #fixes: AttributeError: Can't pickle local object 'ProtBertClassifier.__build_loss.<locals>.loss_fn'
-#         def loss_fn(predictions: dict, targets: dict, hparam: argparse.ArgumentParser, *weight_args):
-#         logits0 = predictions.get("logits0", 0)
-#         logits1 = predictions.get("logits1", 0)
-#         logits2 = predictions.get("logits2", 0)
-#         target0 = targets.get("labels", None)[:,0].to(logits0).long()
-#         target1 = targets.get("labels", None)[:,1].to(logits0).long()
-#         target2 = targets.get("labels", None)[:,2].to(logits0).long()
-# #         assert len(weight_args) == 3, "must pass three aurgmnents to weights..."
-# #         weight0, weight1, weight2 = weight_args
-
-        if self.hparam.use_ce:
-            loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight0) #(logits0, target0) #ignore_index=100 is from dataset!
-            loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight1) #(logits1, target1) #ignore_index=100 is from dataset!
-            loss2 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight2) #(logits2, target2) #ignore_index=100 is from dataset!
-        else:
-            loss0 = FocalLoss(beta=0.9999, weight=self.weight0) #(logits0, target0) #ignore_index=100 is from dataset!
-            loss1 = FocalLoss(beta=0.9999, weight=self.weight1) #(logits1, target1) #ignore_index=100 is from dataset!
-            loss2 = FocalLoss(beta=0.9999, weight=self.weight2) #(logits2, target2) #ignore_index=100 is from dataset!
-#         return (loss0 + loss1 + loss2).mean()
-#         loss = collections.namedtuple("loss", ["loss0_fn", "loss1_fn", "loss2_fn"])
-#         loss.loss0_fn = loss0
-#         loss.loss1_fn = loss1
-#         loss.loss2_fn = loss2
-#         self._loss = loss
-        self.loss0 = loss0
-        self.loss1 = loss1
-        self.loss2 = loss2
 
     def __build_weight(self, nonuniform_weight=True):
         targets = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
@@ -235,9 +206,32 @@ class ProtBertClassifier(L.LightningModule):
             self.weight1 = targets.new_ones(3)
             self.weight2 = targets.new_ones(2)
             
-#         self.weight0 = torch.nn.functional.normalize(self.weight0, dim=-1) if self.hparam.nonuniform_weight else None
-#         self.weight1 = torch.nn.functional.normalize(self.weight1, dim=-1) if self.hparam.nonuniform_weight else None
-#         self.weight2 = torch.nn.functional.normalize(self.weight2, dim=-1) if self.hparam.nonuniform_weight else None
+        self.ce_loss_weight_initialized = True
+    
+    def __build_loss(self):
+        """ Initializes the loss function/s. """
+        self._loss = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing) if self.num_labels > 2 else nn.BCEWithLogitsLoss()
+
+    def __build_loss_ner(self):
+        """ Initializes the loss function/s. """
+        self._loss = CRF(num_tags=self.num_labels, batch_first=True)
+
+    def __build_loss_finetune(self):
+        assert self.ce_loss_weight_initialized, "Loss weights for classification have to be initialized..."
+        
+        """ Initializes the loss function/s. """
+        if self.hparam.use_ce:
+            loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight0) #(logits0, target0) #ignore_index=100 is from dataset!
+            loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight1) #(logits1, target1) #ignore_index=100 is from dataset!
+            loss2 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight2) #(logits2, target2) #ignore_index=100 is from dataset!
+        else:
+            loss0 = FocalLoss(beta=0.9999, weight=self.weight0) #(logits0, target0) #ignore_index=100 is from dataset!
+            loss1 = FocalLoss(beta=0.9999, weight=self.weight1) #(logits1, target1) #ignore_index=100 is from dataset!
+            loss2 = FocalLoss(beta=0.9999, weight=self.weight2) #(logits2, target2) #ignore_index=100 is from dataset!
+
+        self.loss0 = loss0
+        self.loss1 = loss1
+        self.loss2 = loss2
     
     def compute_logits_CURL(self, z_a, z_pos):
         """
@@ -271,27 +265,6 @@ class ProtBertClassifier(L.LightningModule):
         for param in self.model.parameters():
             param.requires_grad = False
         self._frozen = True
-
-    # def predict(self, sample: dict) -> dict:
-    #     """ Predict function.
-    #     :param sample: dictionary with the text we want to classify.
-    #     Returns:
-    #         Dictionary with the input text and the predicted label.
-    #     """
-    #     if self.training:
-    #         self.eval()
-
-    #     with torch.no_grad():
-    #         model_input, _ = self.prepare_sample([sample], prepare_target=False)
-    #         model_out = self.forward(**model_input)
-    #         logits = model_out["logits"].numpy()
-    #         predicted_labels = [
-    #             self.label_encoder.index_to_token[prediction]
-    #             for prediction in np.argmax(logits, axis=1)
-    #         ]
-    #         sample["predicted_label"] = predicted_labels[0]
-
-    #     return sample
     
     # https://github.com/UKPLab/sentence-transformers/blob/eb39d0199508149b9d32c1677ee9953a84757ae4/sentence_transformers/models/Pooling.py
     @staticmethod
