@@ -66,7 +66,9 @@ class ProtBertClassifier(L.LightningModule):
 
             self.freeze_encoder()
         else:
-            pass
+            _ = self.__build_model_finetune() if not self.ner else self.__build_model_ner()
+            _ = self.__build_loss_finetune() if not self.ner else self.__build_model_ner()
+            self.freeze_encoder()
 
     def __build_model(self) -> None:
         """ Init BERT model + tokenizer + classification head."""
@@ -116,7 +118,61 @@ class ProtBertClassifier(L.LightningModule):
 
         wandb.init(project="DL_Sequence_Collab_Matt", entity="hyunp2")
         wandb.watch(self.head)
-   
+
+    def __build_model(self) -> None:
+        """ Init BERT model + tokenizer + classification head."""
+        #model = locals()["model"] if locals()["model"] and isinstance(locals()["model"], BertModel) else BertModel.from_pretrained(self.model_name, cache_dir=self.hparam.load_model_directory)
+        model = BertModel.from_pretrained(self.model_name, cache_dir=self.hparam.load_model_directory)
+ 
+        self.model = model
+        self.encoder_features = self.z_dim
+
+        # Tokenizer
+        self.tokenizer = BertTokenizer.from_pretrained(self.model_name, do_lower_case=False, return_tensors="pt", cache_dir=self.hparam.load_model_directory)
+
+        # Classification head
+        self.head = nn.Sequential(
+            nn.Linear(self.encoder_features*4, self.encoder_features),
+            nn.Linear(self.encoder_features, self.num_labels),
+            nn.Tanh(),
+        )
+        
+        self.classifier0 = nn.Sequential(
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.encoder_features, 3),
+        )
+        
+        self.classifier1 = nn.Sequential(
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.encoder_features, 3),
+        )
+        
+        self.classifier2 = nn.Sequential(
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.encoder_features, self.encoder_features),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.encoder_features, 2),
+        )
+        
+        if self.hparam.loss == "contrastive": 
+            self.make_hook()
+
+        self.wandb_run = wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
+        wandb.watch(self.head)
+    
     def make_hook(self, ):
         self.fhook = dict()
         def hook(m, i, o):
@@ -131,6 +187,58 @@ class ProtBertClassifier(L.LightningModule):
         """ Initializes the loss function/s. """
         self._loss = CRF(num_tags=self.num_labels, batch_first=True)
 
+    def __build_loss(self):
+        """ Initializes the loss function/s. """
+#         global loss_fn #fixes: AttributeError: Can't pickle local object 'ProtBertClassifier.__build_loss.<locals>.loss_fn'
+#         def loss_fn(predictions: dict, targets: dict, hparam: argparse.ArgumentParser, *weight_args):
+#         logits0 = predictions.get("logits0", 0)
+#         logits1 = predictions.get("logits1", 0)
+#         logits2 = predictions.get("logits2", 0)
+#         target0 = targets.get("labels", None)[:,0].to(logits0).long()
+#         target1 = targets.get("labels", None)[:,1].to(logits0).long()
+#         target2 = targets.get("labels", None)[:,2].to(logits0).long()
+# #         assert len(weight_args) == 3, "must pass three aurgmnents to weights..."
+# #         weight0, weight1, weight2 = weight_args
+
+        if self.hparam.use_ce:
+            loss0 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight0) #(logits0, target0) #ignore_index=100 is from dataset!
+            loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight1) #(logits1, target1) #ignore_index=100 is from dataset!
+            loss2 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight2) #(logits2, target2) #ignore_index=100 is from dataset!
+        else:
+            loss0 = FocalLoss(beta=0.9999, weight=self.weight0) #(logits0, target0) #ignore_index=100 is from dataset!
+            loss1 = FocalLoss(beta=0.9999, weight=self.weight1) #(logits1, target1) #ignore_index=100 is from dataset!
+            loss2 = FocalLoss(beta=0.9999, weight=self.weight2) #(logits2, target2) #ignore_index=100 is from dataset!
+#         return (loss0 + loss1 + loss2).mean()
+#         loss = collections.namedtuple("loss", ["loss0_fn", "loss1_fn", "loss2_fn"])
+#         loss.loss0_fn = loss0
+#         loss.loss1_fn = loss1
+#         loss.loss2_fn = loss2
+#         self._loss = loss
+        self.loss0 = loss0
+        self.loss1 = loss1
+        self.loss2 = loss2
+
+    def __build_weight(self, nonuniform_weight=True):
+        targets = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
+        targets = torch.from_numpy(targets).view(len(targets), -1).long().to(self.device) #target is originally list -> change to Tensor (B,1)
+        if nonuniform_weight:
+            valid_targets = (targets < self.hparam.fillna_val) #B,3
+            valid_targets0 = targets[valid_targets[:,0]][:,0].to(targets) #only for targ0
+            valid_targets1 = targets[valid_targets[:,1]][:,1].to(targets) #only for targ1
+            valid_targets2 = targets[valid_targets[:,2]][:,2].to(targets) #only for targ2
+#             print(cf.red(f"0: {valid_targets0.size()}, 1: {valid_targets1.size()}, 2: {valid_targets2.size()}" ))
+            self.weight0 = (1 / (torch.nn.functional.one_hot(valid_targets0).sum(dim=0) / valid_targets0.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
+            self.weight1 = (1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
+            self.weight2 = (1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
+        else:
+            self.weight0 = targets.new_ones(3)
+            self.weight1 = targets.new_ones(3)
+            self.weight2 = targets.new_ones(2)
+            
+#         self.weight0 = torch.nn.functional.normalize(self.weight0, dim=-1) if self.hparam.nonuniform_weight else None
+#         self.weight1 = torch.nn.functional.normalize(self.weight1, dim=-1) if self.hparam.nonuniform_weight else None
+#         self.weight2 = torch.nn.functional.normalize(self.weight2, dim=-1) if self.hparam.nonuniform_weight else None
+    
     def compute_logits_CURL(self, z_a, z_pos):
         """
         WIP!
