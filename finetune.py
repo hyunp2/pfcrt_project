@@ -74,6 +74,8 @@ class ProtBertClassifier(L.LightningModule):
         else:
             # build model
             _ = self.__build_model_finetune() if not self.ner else self.__build_model_ner()
+
+            self.__build_weight()
             
             # Loss criterion initialization.
             _ = self.__build_loss_finetune() if not self.ner else self.__build_model_ner()
@@ -129,7 +131,7 @@ class ProtBertClassifier(L.LightningModule):
         wandb.init(project="DL_Sequence_Collab_Matt", entity="hyunp2")
         wandb.watch(self.head)
 
-    def __build_model(self) -> None:
+    def __build_model_finetune(self) -> None:
         """ Init BERT model + tokenizer + classification head."""
         #model = locals()["model"] if locals()["model"] and isinstance(locals()["model"], BertModel) else BertModel.from_pretrained(self.model_name, cache_dir=self.hparam.load_model_directory)
         model = BertModel.from_pretrained(self.model_name, cache_dir=self.hparam.load_model_directory)
