@@ -372,21 +372,6 @@ class ProtBertClassifier(L.LightningModule):
         elif self.hparam.loss == "contrastive":
             return self.compute_logits_CURL(predictions["logits"], predictions["logits"]) #Crossentropy -> Need second pred to be transformed! each pred is (B,z_dim) shape
 
-    # def prepare_sample(self, sample: list) -> (dict, dict):
-    #     """
-    #     Function that prepares a sample to input the model.
-    #     :param sample: list of dictionaries.
-        
-    #     Returns:
-    #         - dictionary with the expected model inputs.
-    #         - dictionary with the expected target labels.
-    #     """
-    #     inputs = self.tokenizer.batch_encode_plus(sample["seq"],
-    #                                               add_special_tokens=True,
-    #                                               padding=True,
-    #                                               truncation=True,
-    #                                               max_length=self.hparam.max_length)
-
     #     return inputs, sample[]
     def on_train_epoch_start(self, ) -> None:
         self.metric_acc = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
@@ -664,19 +649,29 @@ class ProtBertClassifier(L.LightningModule):
 
     def tokenizing(self, stage="train"):
         x = []
-        for i in range(len(self.dataset[stage]["Seq"])):
-            x.append(' '.join(self.dataset[stage]["Seq"][i]))
-        proper_inputs = x #Spaced btw letters
+        for i in range(len(self.dataset)):
+            x.append(' '.join(self.dataset.iloc[i,1])) #AA Sequence
+        proper_inputs = x #List[seq] of no. of elements (B,)
     
         inputs = self.tokenizer.batch_encode_plus(proper_inputs,
                                           add_special_tokens=True,
                                           padding=True,
                                           truncation=True, return_tensors="pt",
                                           max_length=self.hparam.max_length) #Tokenize inputs as a dict type of Tensors
-        targets = self.dataset[stage]["label"] #list type
-        targets = torch.Tensor(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
-        
+        targets = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
+        targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
+
         dataset = dl.SequenceDataset(inputs, targets)
+        train, val = torch.utils.data.random_split(dataset, self._get_split_sizes(self.hparam.train_frac, dataset),
+                                                                generator=torch.Generator().manual_seed(0))
+        
+        if stage == "train":
+            dataset = train
+        elif stage == "val":
+            dataset = val
+        elif stage == "test":
+            dataset = val
+            
         return dataset #torch Dataset
 
     def train_dataloader(self) -> DataLoader:
