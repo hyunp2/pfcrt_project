@@ -75,6 +75,7 @@ class ProtBertClassifier(L.LightningModule):
             # build model
             _ = self.__build_model_finetune() if not self.ner else self.__build_model_ner()
 
+            # init loss weight
             self.__build_weight()
             
             # Loss criterion initialization.
@@ -308,15 +309,9 @@ class ProtBertClassifier(L.LightningModule):
     
     def forward(self, input_ids, token_type_ids, attention_mask, return_dict=True):    
         result = self.forward_classify(input_ids, token_type_ids, attention_mask, return_dict=True) if not self.ner else self.forward_ner(input_ids, token_type_ids, attention_mask, return_dict=True)
-        return result #(B,2) or (BLC)
+        return result 
 
     def forward_classify(self, input_ids, token_type_ids, attention_mask, return_dict=True):
-        """ Usual pytorch forward function.
-        :param tokens: text sequences [batch_size x src_seq_len]
-        :param lengths: source lengths [batch_size]
-        Returns:
-            Dictionary with model outputs (e.g: logits)
-        """
         word_embeddings = self.model(input_ids=input_ids, token_type_ids=token_type_ids,
                                            attention_mask=attention_mask)[0] #last_hidden_state
 
@@ -324,16 +319,20 @@ class ProtBertClassifier(L.LightningModule):
                                       "cls_token_embeddings": word_embeddings[:, 0],
                                       "attention_mask": attention_mask,
                                       }) 
-        logits = self.head(pooling) #B2
+        logits = self.head[0](pooling) #B,dim; only the first module of sequential
+        logits0 = self.classifier0(logits) #B,3
+        logits1 = self.classifier1(logits) #B,3
+        logits2 = self.classifier2(logits) #B,2
+        
         if return_dict:
             if self.hparam.loss == "classification":
-                return {"logits": logits} #B,num_labels
+                return {"logits0": logits0, "logits1": logits1, "logits2": logits2} #B,num_labels
             elif self.hparam.loss == "contrastive":
                 logits = self.fhook["encoded_feats"]
                 return {"logits": logits} #B, z_dim (differentiable)
         else:
             if self.hparam.loss == "classification":
-                return logits #B,num_labels
+                return logits0, logits1, logits2  #(B,3); (B,3); (B,2)
             elif self.hparam.loss == "contrastive":
                 logits = self.fhook["encoded_feats"]
                 return logits #B, z_dim (differentiable)
@@ -374,257 +373,198 @@ class ProtBertClassifier(L.LightningModule):
         elif self.hparam.loss == "contrastive":
             return self.compute_logits_CURL(predictions["logits"], predictions["logits"]) #Crossentropy -> Need second pred to be transformed! each pred is (B,z_dim) shape
 
-    #     return inputs, sample[]
     def on_train_epoch_start(self, ) -> None:
-        self.metric_acc = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        self.train_outputs = collections.defaultdict(list)
-
+        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc2 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        
     def training_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
-        """ 
-        Runs one training step. This usually consists in the forward function followed
-            by the loss function.
-        
-        :param batch: The output of your dataloader. 
-        :param batch_nb: Integer displaying which batch this is
-        Returns:
-            - dictionary containing the loss and the metrics to be added to the lightning logger.
-        """
         #import pdb; pdb.set_trace()
-        inputs, targets = batch #Both are tesors
-        #print(inputs, targets, "VALUE!!")
-        model_out = self.forward(**inputs) #logicts dictionary
-        loss_train = self.loss(model_out, targets) #scalar loss
-        y = targets["labels"].view(-1,)
-        y_hat = model_out["logits"]
-        labels_hat = torch.argmax(y_hat, dim=-1).to(y)
-        train_acc = self.metric_acc(labels_hat.detach().cpu().view(-1,), y.detach().cpu().view(-1,)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-
-        output = {"train_loss": loss_train, "train_acc": train_acc} #NEVER USE ORDEREDDICT!!!!
-        wandb.log(output)
-        self.log("train_loss", loss_train, prog_bar=True)
-        self.log("train_acc", train_acc, prog_bar=True)
-                
-        self.train_outputs["train_acc"].append(train_acc)
-
-        #self.loss_log_for_train.append({"train_acc": train_acc})
-
-        return {"loss": loss_train, "train_acc": train_acc}
-
-    def on_train_epoch_end(self, ) -> dict:
-        """ Function that takes as input a list of dictionaries returned by the validation_step
-        function and measures the model performance accross the entire validation set.
-        
-        Returns:
-            - Dictionary with metrics to be added to the lightning logger.  
-        """
-        #outputs = self.loss_log_for_train
-        # train_loss_mean = torch.stack([x['train_acc'] for x in self.train_outputs]).mean()
-        train_loss_mean = torch.stack(self.train_outputs["train_acc"], dim=0).to(self.device).mean()
-#         train_acc_mean = self.metric_acc.compute()
-
-#         self.log("train_loss_mean", train_loss_mean, prog_bar=True)
-        self.log("epoch", self.current_epoch)
-
-#         self.log("train_acc_mean", train_acc_mean, prog_bar=True)
-
-#         tqdm_dict = {"epoch_train_loss": train_loss_mean, "epoch_train_acc": train_acc_mean}
-        tqdm_dict = {"epoch_train_loss": train_loss_mean}
-        wandb.log(tqdm_dict)
-        self.metric_acc.reset()    
-
-    def on_validation_epoch_start(self, ) -> None:
-        self.metric_acc = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        self.val_outputs = collections.defaultdict(list)
-
-    def validation_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
-        """ Similar to the training step but with the model in eval mode.
-        Returns:
-            - dictionary passed to the validation_end function.
-        #NEVER USE ORDEREDDICT!!!!
-        """
         inputs, targets = batch
         model_out = self.forward(**inputs)
         #print(model_out.size(), targets["labels"].size())
+        loss_train = self.loss(model_out, targets)
+        
+        y = targets["labels"].view(-1,3) #B3
+        y0 = y[:,0]
+        y1 = y[:,1]
+        y2 = y[:,2]
+        y_hat0 = model_out["logits0"] #(B,3);(B,3),(B,2)
+        y_hat1 = model_out["logits1"] #(B,3);(B,3),(B,2)
+        y_hat2 = model_out["logits2"] #(B,3);(B,3),(B,2)
+        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y)
+        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
+        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
+
+#         train_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+#         train_acc1 = self.metric_acc1(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+#         train_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+        train_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
+        train_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
+        train_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
+        predY = np.stack([labels_hat0.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1)]).T #data,3
+        dataY = np.stack([y0.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1)]).T #data,3
+
+        output = {"train_loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2} #NEVER USE ORDEREDDICT!!!!
+        self.wandb_run.log(output)
+#         self.log("train_loss", loss_train, prog_bar=True)
+#         self.log("train_acc0", train_acc0, prog_bar=True)
+#         self.log("train_acc1", train_acc1, prog_bar=True)
+#         self.log("train_acc2", train_acc2, prog_bar=True)
+
+        return {"loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2, "predY": predY, "dataY": dataY}
+
+    def on_train_epoch_end(self, outputs: list) -> dict:
+        train_loss_mean = torch.stack([x['loss'] for x in outputs]).mean()
+        train_predY = np.concatenate([x['predY'] for x in outputs], axis=0)
+        train_dataY = np.concatenate([x['dataY'] for x in outputs], axis=0)
+        predy0, predy1, predy2 = train_predY[:,0], train_predY[:,1], train_predY[:,2]
+        datay0, datay1, datay2 = train_dataY[:,0], train_dataY[:,1], train_dataY[:,2]
+
+        train_acc0 = balanced_accuracy_score(datay0, predy0)
+        train_acc1 = balanced_accuracy_score(datay1, predy1)
+        train_acc2 = balanced_accuracy_score(datay2, predy2)
+        
+        self.log("epoch", self.current_epoch)
+        self.log("train_loss_mean", train_loss_mean, prog_bar=True)
+
+        tqdm_dict = {"epoch_train_loss": train_loss_mean, "epoch_train_acc0": train_acc0, "epoch_train_acc1": train_acc1, "epoch_train_acc2": train_acc2}
+        self.wandb_run.log(tqdm_dict)
+        
+        self.metric_acc0.reset()   
+        self.metric_acc1.reset()   
+        self.metric_acc2.reset()   
+        
+    def on_validation_epoch_start(self, ) -> None:
+        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc2 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+
+    def validation_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
+        inputs, targets = batch
+#         print(inputs, targets)
+        model_out = self.forward(**inputs)
+        #print(model_out.size(), targets["labels"].size())
+#         print(model_out)
         loss_val = self.loss(model_out, targets)
-        y = targets["labels"].view(-1,) #B or BL
-        y_hat = model_out["logits"] #B2 or BLC
-        labels_hat = torch.argmax(y_hat, dim=-1).to(y)
+        
+        y = targets["labels"].view(-1,3) #B3
+        y0 = y[:,0]
+        y1 = y[:,1]
+        y2 = y[:,2]
+        y_hat0 = model_out["logits0"] #(B,3);(B,3),(B,2)
+        y_hat1 = model_out["logits1"] #(B,3);(B,3),(B,2)
+        y_hat2 = model_out["logits2"] #(B,3);(B,3),(B,2)
+        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y)
+        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
+        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
 
-        #print(y, labels_hat)
-        val_acc = self.metric_acc(labels_hat.detach().cpu().view(-1), y.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-
-        output = {"val_loss": loss_val, "val_acc": val_acc} #NEVER USE ORDEREDDICT!!!!
-        wandb.log(output)
+#         val_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+#         val_acc1 = self.metric_acc1(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+#         val_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+        val_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
+        val_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
+        val_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
+        predY = np.stack([labels_hat0.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1)]).T #data,3
+        dataY = np.stack([y0.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1)]).T #data,3
+#         print(predY.shape, dataY.shape)
+        
+        output = {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2} #NEVER USE ORDEREDDICT!!!!
         self.log("val_loss", loss_val, prog_bar=True)
 
-        self.val_outputs["val_loss"].append(loss_val)
+        self.wandb_run.log(output)
+
+        return {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2, "predY": predY, "dataY": dataY} #NEVER USE ORDEREDDICT!!!!
+
         
-        return output
-        
-    def on_validation_epoch_end(self, ) -> dict:
-        """ Function that takes as input a list of dictionaries returned by the validation_step
-        function and measures the model performance accross the entire validation set.
-        
-        Returns:
-            - Dictionary with metrics to be added to the lightning logger.  
-        """
+    def on_validation_epoch_end(self, outputs: list) -> dict:
         if not self.trainer.sanity_checking:
-            # val_loss_mean = torch.stack([x['val_loss'] for x in self.val_outputs]).mean()
-            val_loss_mean = torch.stack(self.val_outputs["val_loss"], dim=0).to(self.device).mean()
-            # val_acc_mean = torch.stack([x['val_acc'] for x in outputs]).mean()
-#             val_acc_mean = self.metric_acc.compute()
- 
+            val_loss_mean = torch.stack([x['val_loss'] for x in outputs]).mean()
+            val_predY = np.concatenate([x['predY'] for x in outputs], axis=0)
+            val_dataY = np.concatenate([x['dataY'] for x in outputs], axis=0)
+            predy0, predy1, predy2 = val_predY[:,0], val_predY[:,1], val_predY[:,2]
+            datay0, datay1, datay2 = val_dataY[:,0], val_dataY[:,1], val_dataY[:,2]
+            val_acc0 = balanced_accuracy_score(datay0, predy0)
+            val_acc1 = balanced_accuracy_score(datay1, predy1)
+            val_acc2 = balanced_accuracy_score(datay2, predy2)
+            
             self.log("val_loss_mean", val_loss_mean, prog_bar=True)
-#             self.log("val_acc_mean", torch.tensor(val_acc_mean).to(val_loss_mean), prog_bar=True) #tensor mount for Callback Early stop...https://pytorch-lightning.readthedocs.io/en/stable/_modules/pytorch_lightning/callbacks/early_stopping.html#:~:text=def%20_evaluate_stopping_criteria(self%2C%20current%3A%20torch.Tensor)%20%2D%3E%20Tuple%5Bbool%2C%20Optional%5Bstr%5D%5D%3A
+            #For ModelCheckpoint Metric, something is wrong with using numbers at the end of string: e.g. epoch_val_acc0
+            #https://pytorch-lightning.readthedocs.io/en/stable/_modules/pytorch_lightning/callbacks/model_checkpoint.html#:~:text=filename%20%3D%20filename.replace(group%2C%20f%22%7B%7B0%5B%7Bname%7D%5D%22)
+            self.log("epoch_val_acc_A", val_acc0, prog_bar=True)
+            self.log("epoch_val_acc_B", val_acc1, prog_bar=True)
+            self.log("epoch_val_acc_C", val_acc2, prog_bar=True)
             self.log("epoch", self.current_epoch, prog_bar=True)
 
-#             tqdm_dict = {"epoch_val_loss": val_loss_mean, "epoch_val_acc": val_acc_mean}
-            tqdm_dict = {"epoch_val_loss": val_loss_mean}
+            tqdm_dict = {"epoch_val_loss": val_loss_mean, "epoch_val_acc0": val_acc0, "epoch_val_acc1": val_acc1, "epoch_val_acc2": val_acc2}
 
-            wandb.log(tqdm_dict)
-            self.metric_acc.reset()   
+            self.wandb_run.log(tqdm_dict)
+            self.metric_acc0.reset()   
+            self.metric_acc1.reset()   
+            self.metric_acc2.reset()   
 
     def on_test_epoch_start(self, ) -> None:
-        self.metric_acc = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        self.test_outputs = collections.defaultdict(list)
-
+        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc2 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        
     def test_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
-        """ Similar to the training step but with the model in eval mode.
-        Returns:
-            - dictionary passed to the validation_end function.
-        """
+
         inputs, targets = batch
         model_out = self.forward(**inputs)
+        #print(model_out.size(), targets["labels"].size())
         loss_test = self.loss(model_out, targets)
-        y = targets["labels"].view(-1,)
-        y_hat = model_out["logits"]
-        labels_hat = torch.argmax(y_hat, dim=-1).to(y)
-        #import pdb; pdb.set_trace()
-
-        test_acc = self.metric_acc(labels_hat.detach().cpu().view(-1,), y.detach().cpu().view(-1)) #Must mount tensors to CPU
         
-        output = {"test_loss": loss_test, "test_acc": test_acc}
-        wandb.log(output)
-        self.log("test_acc", test_acc, prog_bar=True)
+        y = targets["labels"].view(-1,3) #B3
+        y0 = y[:,0]
+        y1 = y[:,1]
+        y2 = y[:,2]
+        y_hat0 = model_out["logits0"] #(B,3);(B,3),(B,2)
+        y_hat1 = model_out["logits1"] #(B,3);(B,3),(B,2)
+        y_hat2 = model_out["logits2"] #(B,3);(B,3),(B,2)
+        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y)
+        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
+        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
 
-        self.test_outputs["test_loss"].append(loss_test)
+#         test_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+#         test_acc1 = self.metric_acc1(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+#         test_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
+        test_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
+        test_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
+        test_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
+        predY = np.stack([labels_hat0.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1)]).T #data,3
+        dataY = np.stack([y0.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1)]).T #data,3
+
+        output = {"test_loss": loss_test, "test_acc0": test_acc0, "test_acc1": test_acc1, "test_acc2": test_acc2} #NEVER USE ORDEREDDICT!!!!
+#         self.log("test_loss", loss_test, prog_bar=True)
+
+        self.wandb_run.log(output)
         
-        return output
+        return {"test_loss": loss_test, "test_acc0": test_acc0, "test_acc1": test_acc1, "test_acc2": test_acc2, "predY": predY, "dataY": dataY}
 
-    def test_epoch_end(self, ) -> dict:
-        """ Function that takes as input a list of dictionaries returned by the validation_step
-        function and measures the model performance accross the entire validation set.
+    def on_test_epoch_end(self, outputs: list) -> dict:
+
+        test_loss_mean = torch.stack([x['test_loss'] for x in outputs]).mean()
+        test_predY = np.concatenate([x['predY'] for x in outputs], axis=0)
+        test_dataY = np.concatenate([x['dataY'] for x in outputs], axis=0)
+        predy0, predy1, predy2 = test_predY[:,0], test_predY[:,1], test_predY[:,2]
+        datay0, datay1, datay2 = test_dataY[:,0], test_dataY[:,1], test_dataY[:,2]
+        test_acc0 = balanced_accuracy_score(datay0, predy0)
+        test_acc1 = balanced_accuracy_score(datay1, predy1)
+        test_acc2 = balanced_accuracy_score(datay2, predy2)
         
-        Returns:
-            - Dictionary with metrics to be added to the lightning logger.  
-        """
-        # test_loss_mean = torch.stack([x['test_loss'] for x in self.test_outputs]).mean()
-        test_loss_mean = torch.stack(self.test_outputs["test_loss"], dim=0).to(self.device).mean()
-#         test_acc_mean = self.metric_acc.compute()
-#         tqdm_dict = {"epoch_test_loss": test_loss_mean, "epoch_test_acc": test_acc_mean}
-        tqdm_dict = {"epoch_test_loss": test_loss_mean}
-
-        wandb.log(tqdm_dict)
-        self.metric_acc.reset()   
-
-    def on_predict_epoch_start(self, ):
-        if self.hparam.loss == "classification":
-            self.make_hook() #Get a hook if classification was originally trained
-        if self.hparam.loss == "ner":
-            self.make_hook() #Get a hook if ner was originally trained
-        elif self.hparam.loss == "contrastive": 
-            pass
-
-    def predict_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
-        """ Similar to the training step but with the model in eval mode.
-        Returns:
-            - dictionary passed to the validation_end function.
-        """
-        inputs, targets = batch
-        model_out = self.forward(**inputs)
-        loss_test = self.loss(model_out, targets)
-        ground_truth = targets["labels"].view(-1,) #B or (BL)
-        y_hat = model_out["logits"]
-        predictions = y_hat.view(-1, self.num_labels) #B,2 or (BL,C)
-
-        logits = self.fhook["encoded_feats"] #(B,z_dim) or (B,L,z_dim)
-        #assert logits.requires_grad, "it is not differentiable"
-        #import pdb; pdb.set_trace()
+        self.log("test_loss_mean", test_loss_mean, prog_bar=True)
+        tqdm_dict = {"epoch_test_loss": test_loss_mean, "epoch_test_acc0": test_acc0, "epoch_test_acc1": test_acc1, "epoch_test_acc2": test_acc2}
         
-        return {"ground_truth": ground_truth, "predictions": predictions, "last_layer": logits}
-
-    def on_predict_epoch_end(self, outputs: list) -> dict:
-        """ Function that takes as input a list of dictionaries returned by the validation_step
-        function and measures the model performance accross the entire validation set.
+        self.wandb_run.log(tqdm_dict)
+        self.metric_acc0.reset()   
+        self.metric_acc1.reset()   
+        self.metric_acc2.reset()   
         
-        Returns:
-            - Dictionary with metrics to be added to the lightning logger.  
-        """
-        ground_truth = torch.cat([x['ground_truth'] for x in outputs[0]], dim=0).contiguous().view(-1,).detach().cpu().numpy() #catted results (B,) or (BL, )
-        b = ground_truth.shape[0]
-        predictions = torch.cat([x['predictions'] for x in outputs[0]], dim=0).contiguous().view(b,-1).detach().cpu().numpy() #catted results ... weird outputs indexing (B, num_labels) or (BL, num_labels)
-        predictions = predictions.argmax(axis = -1) #(B,) or (BL,)
-        class_names = np.arange(self.num_labels).tolist() #(num_labels)
-        logits = torch.cat([x['last_layer'] for x in outputs[0]], dim=0).contiguous().view(b,-1).detach().cpu().numpy() #catted results (B,reduced_dim)
-        logits_ = logits #(B,zdim) or (B,L,zdim)
-        if self.ner: logits_ = logits_[:,0,:] #to (B,zdim) from [CLS]
-        
-        self.plot_confusion(ground_truth, predictions, class_names)
-        self.plot_manifold(self.hparam, logits_, ground_truth) #WIP to have residue projection as well!
-        self.plot_ngl(self.hparam)
- 
-    @staticmethod
-    def plot_confusion(ground_truth: np.ndarray, predictions: np.ndarray, class_names: np.ndarray=np.array([0,1])):
-        from sklearn.metrics import RocCurveDisplay, PrecisionRecallDisplay
-        from sklearn.calibration import CalibrationDisplay
-        cm = wandb.plot.confusion_matrix(
-            y_true=ground_truth,
-            preds=predictions,
-            class_names=class_names) 
-        wandb.log({"Confusion Matrix": cm}) #Needs (B, )
-        
-        disp = RocCurveDisplay.from_predictions(ground_truth, predictions)
-        fig = disp.figure_
-        wandb.log({"ROC": fig}) #Needs (B/BL,num_labels)
-        disp = PrecisionRecallDisplay.from_predictions(ground_truth, predictions)
-        fig = disp.figure_
-        wandb.log({"PR": fig}) #Needs (B/BL,num_labels)
-#         disp = CalibrationDisplay.from_predictions(ground_truth, predictions)
-#         fig = disp.figure_
-#         wandb.log({"Calibration": fig}) #Needs (B/BL,num_labels)
-
-    @staticmethod
-    def plot_manifold(hparam: argparse.ArgumentParser, logits_: np.ndarray, ground_truth: np.ndarray):
-        #WIP for PCA or UMAP or MDS
-        #summary is 
-        import sklearn.manifold
-        import plotly.express as px
-        tsne = sklearn.manifold.TSNE(2)
-        logits_tsne = tsne.fit_transform(logits_) #(B,2) of tsne
-        path_to_plotly_html = os.path.join(hparam.load_model_directory, "plotly_figure.html")
-        fig = px.scatter(x=logits_tsne[:,0], y=logits_tsne[:,1], color=ground_truth)
-        fig.write_html(path_to_plotly_html, auto_play = False)
-        table = wandb.Table(columns = ["plotly_figure"])
-        table.add_data(wandb.Html(path_to_plotly_html))
-        wandb.log({"TSNE Plot": table})
-
-    @staticmethod
-    def plot_ngl(hparam: argparse.ArgumentParser):
-        #WIP for filename!
-        import nglview as nv
-        import MDAnalysis as mda
-        universe = mda.Universe("/Scr/hyunpark/ZIKV_ConcatDCD_for_DL/REDO/data/alanine-dipeptide-nowater_charmmgui.psf", "/Scr/hyunpark/ZIKV_ConcatDCD_for_DL/REDO/data/alanine-dipeptide-nowater_charmmgui.pdb")   
-        u = universe.select_atoms("all")
-        w = nv.show_mdanalysis(u)
-        w.clear_representations()
-        #w.add_licorice(selection="protein")
-        w.add_representation('licorice', selection='all', color='blue')
-        w.render_image(factor=1, frame=3, transparent=False)
-        path_to_ngl_html = os.path.join(hparam.load_model_directory, "nglview_figure.html")
-        nv.write_html(path_to_ngl_html, [w])     
-        table = wandb.Table(columns = ["nglview_figure"])
-        table.add_data(wandb.Html(path_to_ngl_html))
-        wandb.log({"NGL View": table}) 
+        artifact = wandb.Artifact(name="finetune", type="torch_model")
+        path_and_name = os.path.join(self.hparam.load_model_directory, self.hparam.load_model_checkpoint)
+        artifact.add_file(str(path_and_name)) #which directory's file to add; when downloading it downloads directory/file
+        self.wandb_run.log_artifact(artifact)
 
     def configure_optimizers(self):
         """ Sets different Learning rates for different parameter groups. """
