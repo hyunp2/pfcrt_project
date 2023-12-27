@@ -50,7 +50,7 @@ class ProtBertClassifier(L.LightningModule):
         self.batch_size = self.hparam.batch_size
         self.model_name = self.hparam.model_name #"Rostlab/prot_bert_bfd"  
         self.ner = self.hparam.ner #bool
-        self.dataset = load_dataset(hparam.dataset, cache_dir=hparam.load_data_directory) #switch to a dataset!
+        self.dataset = load_dataset(hparam.dataset, cache_dir=hparam.load_data_directory) #switch to a dataset!; https://huggingface.co/datasets/yarongef/human_proteome_triplets
         self.num_labels = np.unique(self.dataset["train"]["label"]).__len__() #2 for Filippo; many for Matt 
 #         self.num_labels = 2
         # self.metric_acc = torchmetrics.Accuracy()
