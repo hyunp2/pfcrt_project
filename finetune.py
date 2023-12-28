@@ -23,6 +23,7 @@ from typing import *
 from torchcrf import CRF
 import BertNER
 import BertNERTokenizer
+from sklearn.metrics import balanced_accuracy_score
 
 #https://github.com/HelloJocelynLu/t5chem/blob/main/t5chem/archived/MultiTask.py for more info
 
@@ -51,7 +52,7 @@ class ProtBertClassifier(L.LightningModule):
         self.model_name = self.hparam.model_name #"Rostlab/prot_bert_bfd"  
         self.ner = self.hparam.ner #bool
         
-        self.num_labels = np.unique(self.dataset["train"]["label"]).__len__() #2 for Filippo; many for Matt 
+        # self.num_labels = np.unique(self.dataset["train"]["label"]).__len__() #2 for Filippo; many for Matt 
 
         self.z_dim = self.hparam.z_dim #Add this!
         if self.hparam.loss == "contrastive": self.register_parameter("W", torch.nn.Parameter(torch.rand(self.z_dim, self.z_dim))) #CURL purpose
@@ -61,6 +62,7 @@ class ProtBertClassifier(L.LightningModule):
         parser = DataParser.get_data("pfcrt.xlsx")
         data_trunc = parser.select_columns(fill_na=self.hparam.fillna_val)
         self.dataset = data_trunc
+        self.num_labels = 3 # WIP: change this!
 
         ###FINETUNE OPTIONS 2 (finetune classfication)
         if not self.hparam.finetune:
@@ -311,6 +313,23 @@ class ProtBertClassifier(L.LightningModule):
         result = self.forward_classify(input_ids, token_type_ids, attention_mask, return_dict=True) if not self.ner else self.forward_ner(input_ids, token_type_ids, attention_mask, return_dict=True)
         return result 
 
+    def forward_ner(self, input_ids, token_type_ids, attention_mask, return_dict=True):
+        """ Usual pytorch forward function.
+        :param tokens: text sequences [batch_size x src_seq_len]
+        :param lengths: source lengths [batch_size]
+        Returns:
+            Dictionary with model outputs (e.g: logits)
+        """
+        word_embeddings = self.model(input_ids=input_ids, token_type_ids=token_type_ids,
+                                           attention_mask=attention_mask)[0] #last_hidden_state
+        logits = self.head(word_embeddings) #BLC
+        if return_dict:
+            if self.hparam.loss == "ner":
+                return {"logits": logits} #BLC
+        else:
+            if self.hparam.loss == "ner":
+                return logits #BLC
+    
     def forward_classify(self, input_ids, token_type_ids, attention_mask, return_dict=True):
         word_embeddings = self.model(input_ids=input_ids, token_type_ids=token_type_ids,
                                            attention_mask=attention_mask)[0] #last_hidden_state
@@ -337,22 +356,6 @@ class ProtBertClassifier(L.LightningModule):
                 logits = self.fhook["encoded_feats"]
                 return logits #B, z_dim (differentiable)
 
-    def forward_ner(self, input_ids, token_type_ids, attention_mask, return_dict=True):
-        """ Usual pytorch forward function.
-        :param tokens: text sequences [batch_size x src_seq_len]
-        :param lengths: source lengths [batch_size]
-        Returns:
-            Dictionary with model outputs (e.g: logits)
-        """
-        word_embeddings = self.model(input_ids=input_ids, token_type_ids=token_type_ids,
-                                           attention_mask=attention_mask)[0] #last_hidden_state
-        logits = self.head(word_embeddings) #BLC
-        if return_dict:
-            if self.hparam.loss == "ner":
-                return {"logits": logits} #BLC
-        else:
-            if self.hparam.loss == "ner":
-                return logits #BLC
 
     def loss(self, predictions: dict, targets: torch.Tensor) -> torch.tensor:
         """
@@ -363,16 +366,22 @@ class ProtBertClassifier(L.LightningModule):
         Returns:
             torch.tensor with loss value.
         """
-        if self.hparam.loss == "classification" and not self.ner:
-            if self.num_labels > 2:
-                return self._loss(predictions["logits"], targets["labels"].view(-1, )) #Crossentropy ;; input: (B,2) target (B,)
-            else:
-                return self._loss(predictions["logits"].amax(dim=-1).view(-1, ), targets["labels"].view(-1, ).to(torch.float32)) #BinaryCrossentropy ;; input: (B,) target (B,)
-        elif self.hparam.loss == "classification" and self.ner:
-            return self._loss(predictions["logits"], targets["labels"].view(-1, self.num_labels)) #CRF ;; input (B,L,C) target (B,L) ;; B->num_frames & L->num_aa_residues & C->num_lipid_types
-        elif self.hparam.loss == "contrastive":
-            return self.compute_logits_CURL(predictions["logits"], predictions["logits"]) #Crossentropy -> Need second pred to be transformed! each pred is (B,z_dim) shape
-
+        if not self.hparam.finetune:
+            raise Exception("ERROR: finetune must be turned on!")
+            if self.hparam.loss == "classification" and not self.ner:
+                if self.num_labels > 2:
+                    return self._loss(predictions["logits"], targets["labels"].view(-1, )) #Crossentropy ;; input: (B,2) target (B,)
+                else:
+                    return self._loss(predictions["logits"].amax(dim=-1).view(-1, ), targets["labels"].view(-1, ).to(torch.float32)) #BinaryCrossentropy ;; input: (B,) target (B,)
+            elif self.hparam.loss == "classification" and self.ner:
+                return self._loss(predictions["logits"], targets["labels"].view(-1, self.num_labels)) #CRF ;; input (B,L,C) target (B,L) ;; B->num_frames & L->num_aa_residues & C->num_lipid_types
+            elif self.hparam.loss == "contrastive":
+                return self.compute_logits_CURL(predictions["logits"], predictions["logits"]) #Crossentropy -> Need second pred to be transformed! each pred is (B,z_dim) shape
+        else:
+            loss0_fn, loss1_fn, loss2_fn = self.loss0, self.loss1, self.loss2
+            losses = loss0_fn(predictions["logits0"], targets["labels"][:,0].long())  + loss1_fn(predictions["logits1"], targets["labels"][:,1].long()) + loss2_fn(predictions["logits2"], targets["labels"][:,2].long())
+            return losses.mean()
+    
     def on_train_epoch_start(self, ) -> None:
         self.metric_acc0 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.metric_acc1 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
@@ -601,7 +610,7 @@ class ProtBertClassifier(L.LightningModule):
                                           truncation=True, return_tensors="pt",
                                           max_length=self.hparam.max_length) #Tokenize inputs as a dict type of Tensors
         targets = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
-        targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
+        targets = torch.from_numpy(targets).view(len(targets), -1).long().to(self.device) #target is originally list -> change to Tensor (B,1)
 
         dataset = dl.SequenceDataset(inputs, targets)
         train, val = torch.utils.data.random_split(dataset, self._get_split_sizes(self.hparam.train_frac, dataset),
