@@ -36,12 +36,12 @@ class DataParser(object):
         if drop_duplicate_on == None:
             data = self.data.loc[:,col_names]
             data.dropna(axis=0, inplace=dropna)
-#             data.fillna(value=fill_na, inplace=True)
+            data.fillna(value=fill_na, inplace=True)
             return data
         elif drop_duplicate_on != None:
             data = self.data.loc[:,col_names].drop_duplicates(drop_duplicate_on)
             data.dropna(axis=0, inplace=dropna)
-#             data.fillna(value=fill_na, inplace=True) 
+            data.fillna(value=fill_na, inplace=True) 
             return data
         
     
