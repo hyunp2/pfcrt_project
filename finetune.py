@@ -580,7 +580,7 @@ class ProtBertClassifier(L.LightningModule):
         """ Sets different Learning rates for different parameter groups. """
         parameters = [
             {"params": self.head.parameters(), "lr": self.hparam.learning_rate*0.1},
-            {"params": self.model.parameters()},
+            {"params": self.model.parameters(), "lr": self.hparam.learning_rate*0.1},
             {"params": self.classifier0.parameters()},
             {"params": self.classifier1.parameters()},
             {"params": self.classifier2.parameters()}
