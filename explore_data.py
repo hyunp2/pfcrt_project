@@ -35,13 +35,13 @@ class DataParser(object):
                                                                "PPQ Resistance", "CQ Resistance", "Fitness"], drop_duplicate_on="Amino Acid Sequence", fill_na=None, dropna=True):
         if drop_duplicate_on == None:
             data = self.data.loc[:,col_names]
-            data.dropna(axis=0, inplace=dropna)
             data.fillna(value=fill_na, inplace=True)
+            data.dropna(axis=0, inplace=dropna)
             return data
         elif drop_duplicate_on != None:
             data = self.data.loc[:,col_names].drop_duplicates(drop_duplicate_on)
-            data.dropna(axis=0, inplace=dropna)
             data.fillna(value=fill_na, inplace=True) 
+            data.dropna(axis=0, inplace=dropna)
             return data
         
     
