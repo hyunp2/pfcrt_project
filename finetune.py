@@ -24,6 +24,7 @@ from typing import *
 from torchcrf import CRF
 import BertNER
 import BertNERTokenizer
+from focal_loss import FocalLoss
 from sklearn.metrics import balanced_accuracy_score
 
 #https://github.com/HelloJocelynLu/t5chem/blob/main/t5chem/archived/MultiTask.py for more info
