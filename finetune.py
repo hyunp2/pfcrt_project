@@ -35,7 +35,7 @@ logging.basicConfig()
 logger = logging.getLogger("BERT Fine-tuning")
 logger.setLevel(logging.DEBUG)
 
-class ProtBertClassifier(L.LightningModule):
+class ProtBertClassifierFinetune(L.LightningModule):
     """
     # https://github.com/minimalist-nlp/lightning-text-classification.git
     
