@@ -579,10 +579,11 @@ class ProtBertClassifier(L.LightningModule):
     def configure_optimizers(self):
         """ Sets different Learning rates for different parameter groups. """
         parameters = [
-            {"params": self.head.parameters()},
-            {
-                "params": self.model.parameters(), 
-            },
+            {"params": self.head.parameters(), "lr": self.hparam.learning_rate*0.1},
+            {"params": self.model.parameters()},
+            {"params": self.classifier0.parameters()},
+            {"params": self.classifier1.parameters()},
+            {"params": self.classifier2.parameters()}
         ]
         if self.hparam.optimizer == "adafactor":
             optimizer = Adafactor(parameters, relative_step=True)
@@ -595,7 +596,9 @@ class ProtBertClassifier(L.LightningModule):
             num_warmup_steps=warmup_steps,
             num_training_steps=total_training_steps,
         )
-        scheduler = {"scheduler": scheduler, "interval": "step", "frequency": 1}
+#         optimizer = {"optimizer": optimizer, "frequency": 1}
+        #https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#:~:text=is%20shown%20below.-,lr_scheduler_config,-%3D%20%7B%0A%20%20%20%20%23%20REQUIRED
+        scheduler = {"scheduler": scheduler, "interval": "step", "frequency": 1} #Every step/epoch with Frequency 1etc by monitoring val_loss if needed
 
         return [optimizer], [scheduler]
 
