@@ -47,7 +47,7 @@ class DataParser(object):
         
     
 if __name__ == "__main__":
-    parser = DataParser(filename="pfcrt.csv")
+    parser = DataParser(filename="pfcrt.xlsx")
     data = parser.data
 #     data_trunc = parser.select_columns()
 #     print(data_trunc)
