@@ -79,7 +79,7 @@ class ProtBertClassifier(L.LightningModule):
             _ = self.__build_model_finetune() if not self.ner else self.__build_model_ner()
 
             # init loss weight
-            self.__build_weight()
+            self.__build_weight(nonuniform_weight=self.hparam.nonuniform_weight)
             
             # Loss criterion initialization.
             _ = self.__build_loss_finetune() if not self.ner else self.__build_model_ner()
@@ -231,7 +231,7 @@ class ProtBertClassifier(L.LightningModule):
             loss1 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight1) #(logits1, target1) #ignore_index=100 is from dataset!
             loss2 = nn.CrossEntropyLoss(label_smoothing=self.hparam.label_smoothing, ignore_index=self.hparam.fillna_val, weight=self.weight2) #(logits2, target2) #ignore_index=100 is from dataset!
         else:
-            loss0 = FocalLoss(beta=0.9999, weight=self.weight0) #(logits0, target0) #ignore_index=100 is from dataset!
+            loss0 = FocalLoss(beta=0.9999,  weight=self.weight0) #(logits0, target0) #ignore_index=100 is from dataset!
             loss1 = FocalLoss(beta=0.9999, weight=self.weight1) #(logits1, target1) #ignore_index=100 is from dataset!
             loss2 = FocalLoss(beta=0.9999, weight=self.weight2) #(logits2, target2) #ignore_index=100 is from dataset!
 
