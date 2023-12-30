@@ -9,7 +9,7 @@ from torch.autograd import Variable
 
 class FocalLoss(nn.Module):
     """SOFTMAX (only best class contrib) (not SIGMOID; adding all class contribs)"""
-    def __init__(self, gamma=2., beta: float=0.9999, size_average=True, threshold=100, weight: torch.Tensor=torch.ones(3)):
+    def __init__(self, gamma=2., beta: float=0.9999, size_average=True, threshold=100, weight: torch.Tensor=torch.ones(3), ignore_index=None):
         super(FocalLoss, self).__init__()
         self.gamma = gamma
 #         self.alpha = alpha
@@ -20,6 +20,7 @@ class FocalLoss(nn.Module):
 #         if isinstance(alpha,(float,int)): self.alpha = torch.Tensor([alpha,1-alpha])
 #         if isinstance(alpha,list): self.alpha = torch.Tensor(alpha)
         self.size_average = size_average
+        self.ignore_index = ignore_index
 
     def forward(self, input, target):
         if input.dim() == 2:
@@ -34,13 +35,19 @@ class FocalLoss(nn.Module):
         logpt = F.log_softmax(input, dim=-1)
         logpt = logpt.gather(1,target)
         logpt = logpt.view(-1)
+        
+        if self.ignore_index is not None:
+            retain_these = target.view(-1, ) != self.ignore_index
+            logpt = logpt[retain_these]
+            target = target.view(-1, )[retain_these].view(-1, 1)
+            
         pt = logpt.data.exp() #non-diff
 
         if self.effective_num is not None:
 #             if self.alpha.type()!=input.data.type():
 #                 self.alpha = self.alpha.type_as(input.data)
             self.effective_num = self.effective_num.to(logpt)
-            at = self.effective_num.gather(0,target.data.view(-1))
+            at = self.effective_num.gather(0, target.data.view(-1))
             logpt = logpt * at.data
 
         loss = -1 * (1-pt)**self.gamma * logpt
