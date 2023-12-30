@@ -106,7 +106,7 @@ class ProtBertClassifier(L.LightningModule):
         if self.hparam.loss == "contrastive": 
             self.make_hook()
 
-        wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
+        self.wandb_run = wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
         wandb.watch(self.head)
 
     def __build_model_ner(self) -> None:
@@ -132,7 +132,7 @@ class ProtBertClassifier(L.LightningModule):
         if self.hparam.loss == "contrastive": 
             self.make_hook()
 
-        wandb.init(project="DL_Sequence_Collab_Matt", entity="hyunp2")
+        self.wandb_run = wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
         wandb.watch(self.head)
 
     def __build_model_finetune(self) -> None:
@@ -380,14 +380,17 @@ class ProtBertClassifier(L.LightningModule):
                 return self.compute_logits_CURL(predictions["logits"], predictions["logits"]) #Crossentropy -> Need second pred to be transformed! each pred is (B,z_dim) shape
         else:
             loss0_fn, loss1_fn, loss2_fn = self.loss0, self.loss1, self.loss2
-            losses = loss0_fn(predictions["logits0"], targets["labels"][:,0].long())  + loss1_fn(predictions["logits1"], targets["labels"][:,1].long()) + loss2_fn(predictions["logits2"], targets["labels"][:,2].long())
+            assert len(self.hparam.loss_weights) == 3, "exactly three values should be provided for loss weights!"
+            w0, w1, w2 = self.hparam.loss_weights
+            losses = w0 * loss0_fn(predictions["logits0"], targets["labels"][:,0].long()) + w1 * loss1_fn(predictions["logits1"], targets["labels"][:,1].long()) + w2 * loss2_fn(predictions["logits2"], targets["labels"][:,2].long())
             return losses.mean()
     
     def on_train_epoch_start(self, ) -> None:
         self.metric_acc0 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.metric_acc1 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.metric_acc2 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        
+        self.train_outputs = collections.defaultdict(list)
+
     def training_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
         #import pdb; pdb.set_trace()
         inputs, targets = batch
@@ -406,9 +409,6 @@ class ProtBertClassifier(L.LightningModule):
         labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
         labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
 
-#         train_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-#         train_acc1 = self.metric_acc1(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-#         train_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
         train_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
         train_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
         train_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
@@ -417,17 +417,18 @@ class ProtBertClassifier(L.LightningModule):
 
         output = {"train_loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2} #NEVER USE ORDEREDDICT!!!!
         self.wandb_run.log(output)
-#         self.log("train_loss", loss_train, prog_bar=True)
-#         self.log("train_acc0", train_acc0, prog_bar=True)
-#         self.log("train_acc1", train_acc1, prog_bar=True)
-#         self.log("train_acc2", train_acc2, prog_bar=True)
 
-        return {"loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2, "predY": predY, "dataY": dataY}
+        self.train_outputs["loss"].append(loss_train)
+        self.train_outputs["predY"].append(predY)
+        self.train_outputs["dataY"].append(dataY)
 
-    def on_train_epoch_end(self, outputs: list) -> dict:
-        train_loss_mean = torch.stack([x['loss'] for x in outputs]).mean()
-        train_predY = np.concatenate([x['predY'] for x in outputs], axis=0)
-        train_dataY = np.concatenate([x['dataY'] for x in outputs], axis=0)
+        return {"loss": loss_train, "predY": predY, "dataY": dataY}
+
+    def on_train_epoch_end(self, ) -> dict:
+        train_loss_mean = torch.stack(self.train_outputs["loss"], dim=0).to(self.device).mean()
+        train_predY = np.concatenate(self.train_outputs["predY"], axis=0)
+        train_dataY = np.concatenate(self.train_outputs["dataY"], axis=0)
+        
         predy0, predy1, predy2 = train_predY[:,0], train_predY[:,1], train_predY[:,2]
         datay0, datay1, datay2 = train_dataY[:,0], train_dataY[:,1], train_dataY[:,2]
 
@@ -449,6 +450,7 @@ class ProtBertClassifier(L.LightningModule):
         self.metric_acc0 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.metric_acc1 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.metric_acc2 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.val_outputs = collections.defaultdict(list)
 
     def validation_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
         inputs, targets = batch
@@ -469,29 +471,29 @@ class ProtBertClassifier(L.LightningModule):
         labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
         labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
 
-#         val_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-#         val_acc1 = self.metric_acc1(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-#         val_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
         val_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
         val_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
         val_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
         predY = np.stack([labels_hat0.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1)]).T #data,3
         dataY = np.stack([y0.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1)]).T #data,3
-#         print(predY.shape, dataY.shape)
         
         output = {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2} #NEVER USE ORDEREDDICT!!!!
         self.log("val_loss", loss_val, prog_bar=True)
-
         self.wandb_run.log(output)
 
-        return {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2, "predY": predY, "dataY": dataY} #NEVER USE ORDEREDDICT!!!!
+        self.val_outputs["val_loss"].append(loss_val)
+        self.val_outputs["predY"].append(predY)
+        self.val_outputs["dataY"].append(dataY)
+
+        return {"val_loss": loss_val, "predY": predY, "dataY": dataY} #NEVER USE ORDEREDDICT!!!!
 
         
-    def on_validation_epoch_end(self, outputs: list) -> dict:
+    def on_validation_epoch_end(self, ) -> dict:
         if not self.trainer.sanity_checking:
-            val_loss_mean = torch.stack([x['val_loss'] for x in outputs]).mean()
-            val_predY = np.concatenate([x['predY'] for x in outputs], axis=0)
-            val_dataY = np.concatenate([x['dataY'] for x in outputs], axis=0)
+            val_loss_mean = torch.stack(self.val_outputs["val_loss"], dim=0).to(self.device).mean()
+            val_predY = np.concatenate(self.val_outputs["predY"], axis=0)
+            val_dataY = np.concatenate(self.val_outputs["dataY"], axis=0)
+        
             predy0, predy1, predy2 = val_predY[:,0], val_predY[:,1], val_predY[:,2]
             datay0, datay1, datay2 = val_dataY[:,0], val_dataY[:,1], val_dataY[:,2]
             val_acc0 = balanced_accuracy_score(datay0, predy0)
@@ -517,7 +519,8 @@ class ProtBertClassifier(L.LightningModule):
         self.metric_acc0 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.metric_acc1 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.metric_acc2 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        
+        self.test_outputs = collections.defaultdict(list)
+
     def test_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
 
         inputs, targets = batch
@@ -536,9 +539,6 @@ class ProtBertClassifier(L.LightningModule):
         labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
         labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
 
-#         test_acc0 = self.metric_acc0(labels_hat0.detach().cpu().view(-1), y0.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-#         test_acc1 = self.metric_acc1(labels_hat1.detach().cpu().view(-1), y1.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
-#         test_acc2 = self.metric_acc2(labels_hat2.detach().cpu().view(-1), y2.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
         test_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
         test_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
         test_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
@@ -546,17 +546,19 @@ class ProtBertClassifier(L.LightningModule):
         dataY = np.stack([y0.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1)]).T #data,3
 
         output = {"test_loss": loss_test, "test_acc0": test_acc0, "test_acc1": test_acc1, "test_acc2": test_acc2} #NEVER USE ORDEREDDICT!!!!
-#         self.log("test_loss", loss_test, prog_bar=True)
-
         self.wandb_run.log(output)
+
+        self.test_outputs["test_loss"].append(loss_test)
+        self.test_outputs["predY"].append(predY)
+        self.test_outputs["dataY"].append(dataY)
         
-        return {"test_loss": loss_test, "test_acc0": test_acc0, "test_acc1": test_acc1, "test_acc2": test_acc2, "predY": predY, "dataY": dataY}
+        return {"test_loss": loss_test, "predY": predY, "dataY": dataY}
 
-    def on_test_epoch_end(self, outputs: list) -> dict:
-
-        test_loss_mean = torch.stack([x['test_loss'] for x in outputs]).mean()
-        test_predY = np.concatenate([x['predY'] for x in outputs], axis=0)
-        test_dataY = np.concatenate([x['dataY'] for x in outputs], axis=0)
+    def on_test_epoch_end(self, ) -> dict:
+        test_loss_mean = torch.stack(self.test_outputs["test_loss"], dim=0).to(self.device).mean()
+        test_predY = np.concatenate(self.test_outputs["predY"], axis=0)
+        test_dataY = np.concatenate(self.test_outputs["dataY"], axis=0)
+        
         predy0, predy1, predy2 = test_predY[:,0], test_predY[:,1], test_predY[:,2]
         datay0, datay1, datay2 = test_dataY[:,0], test_dataY[:,1], test_dataY[:,2]
         test_acc0 = balanced_accuracy_score(datay0, predy0)
@@ -578,13 +580,23 @@ class ProtBertClassifier(L.LightningModule):
 
     def configure_optimizers(self):
         """ Sets different Learning rates for different parameter groups. """
+
+        loss_weights = np.array(self.hparam.loss_weights)
+        loss_weights_indices = np.where(loss_weights != 0.)[0]
+        update_these_opt = []
+        optimizer_list = [
+                            {"params": self.classifier0.parameters()},
+                            {"params": self.classifier1.parameters()},
+                            {"params": self.classifier2.parameters()}
+                         ]
+        [update_these_opt.append(optimizer_list[idx]) for idx in loss_weights_indices]
+        
         parameters = [
-            {"params": self.head.parameters(), "lr": self.hparam.learning_rate*0.1},
-            {"params": self.model.parameters(), "lr": self.hparam.learning_rate*0.1},
-            {"params": self.classifier0.parameters()},
-            {"params": self.classifier1.parameters()},
-            {"params": self.classifier2.parameters()}
-        ]
+            {"params": self.head.parameters(), "lr": self.hparam.learning_rate * 0.1},
+            {"params": self.model.parameters(), "lr": self.hparam.learning_rate * 0.01},
+            *update_these_opt
+        ] #Explicitly set which to optimize!
+        
         if self.hparam.optimizer == "adafactor":
             optimizer = Adafactor(parameters, relative_step=True)
         elif self.hparam.optimizer == "adamw":
