@@ -64,7 +64,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         parser = DataParser.get_data("pfcrt.xlsx")
         data_trunc = parser.select_columns(fill_na=self.hparam.fillna_val)
         self.dataset = data_trunc
-        self.num_labels = 3 # WIP: change this!
+        self.num_labels = 2 #for loading pretrained weights
 
         ###FINETUNE OPTIONS 2 (finetune classfication)
         if not self.hparam.finetune:
@@ -86,6 +86,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
             _ = self.__build_loss_finetune() if not self.ner else self.__build_model_ner()
             
             self.freeze_encoder()
+        self.num_labels = 10 #arbitrarily large number 
 
     def __build_model(self) -> None:
         """ Init BERT model + tokenizer + classification head."""
