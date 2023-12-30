@@ -14,9 +14,10 @@ from transformers import BertTokenizer, BertModel, AutoModel, AutoTokenizer, Ber
 
 @dataclasses.dataclass
 class DataParser(object):
-    def __init__(self, filename:str = None):
-        data = self.read_file(filename)
-        self.data = data
+    filename: str = dataclasses.field(default=None)
+    
+    def __post_init__(self, ):
+        self.data = DataParser.read_file(self.filename)
         
     @classmethod
     def get_data(cls, filename):
@@ -26,7 +27,8 @@ class DataParser(object):
     def read_file(filename: str):
         ext = os.path.splitext(filename)[-1]
         if ext in [".xlsx"]:
-            data = pd.read_excel(f"{filename}")
+            # data = pd.read_excel(f"{filename}")
+            ...
         elif ext in [".csv"]:
             data = pd.read_csv(f"{filename}")        
         return data
