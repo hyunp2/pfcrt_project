@@ -189,5 +189,5 @@ if __name__ == "__main__":
     #python -m train --ngpus "auto" --accelerator gpu --strategy ddp -b 512 
     #python -m train --ngpus "auto" --accelerator gpu --strategy none -b 8 --finetune -ckpt ckpt_for_finetune.ckpt --use_ce --nonuniform_weight
 
-    #[Dec 19th 2023] python -m train --ngpus "auto" --accelerator gpu --strategy none -b 512 
-    #[Dec 30th 2023] python -m train --ngpus "auto" --accelerator gpu --strategy none -b 512 --finetune --loss_weights 0 1 0
+    #[Dec 19th 2023] git pull && python -m train --ngpus "auto" --accelerator gpu --strategy none -b 512 
+    #[Dec 30th 2023] git pull && python -m train --ngpus "auto" --accelerator gpu --strategy none -b 512 --finetune --loss_weights 0 1 0
