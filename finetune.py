@@ -619,7 +619,9 @@ class ProtBertClassifierFinetune(L.LightningModule):
     def tokenizing(self, stage="train"):
         x = []
         for i in range(len(self.dataset)):
-            x.append(' '.join(self.dataset.iloc[i,1])) #AA Sequence
+            seq = str(self.dataset.iloc[i,1])
+            seq = seq.split("")
+            x.append(' '.join(seq)) #AA Sequence
         proper_inputs = x #List[seq] of no. of elements (B,)
     
         inputs = self.tokenizer.batch_encode_plus(proper_inputs,
