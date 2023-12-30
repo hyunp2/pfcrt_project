@@ -46,7 +46,7 @@ class DataParser(object):
         
     
 if __name__ == "__main__":
-    parser = DataParser(filename="pfcrt.csv")
+    parser = DataParser(filename="pfcrt.xlsx")
     data = parser.data
 #     data_trunc = parser.select_columns()
 #     print(data_trunc)
@@ -64,6 +64,7 @@ if __name__ == "__main__":
     # 75%          0.250000       1.000000   1.000000
     # max          2.000000       2.000000   1.000000
     
+    """
     def get_args():
         parser = argparse.ArgumentParser(description='Training')
 
@@ -148,20 +149,20 @@ if __name__ == "__main__":
     targets = data_trunc.iloc[:,2:].values #list type including nans; (B,3)
     targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
     
-    """
-    valid_targets = (targets < hparams.fillna_val) #B,3
-#     print(valid_targets.any(dim=-1), targets, targets.size())
     
-    valid_targets0 = targets[valid_targets[:,0]][:,0].to(targets) #only for targ0
-    valid_targets1 = targets[valid_targets[:,1]][:,1].to(targets) #only for targ1
-    valid_targets2 = targets[valid_targets[:,2]][:,2].to(targets) #only for targ2
-#     print(valid_targets0, valid_targets1, valid_targets2)
+#     valid_targets = (targets < hparams.fillna_val) #B,3
+# #     print(valid_targets.any(dim=-1), targets, targets.size())
+    
+#     valid_targets0 = targets[valid_targets[:,0]][:,0].to(targets) #only for targ0
+#     valid_targets1 = targets[valid_targets[:,1]][:,1].to(targets) #only for targ1
+#     valid_targets2 = targets[valid_targets[:,2]][:,2].to(targets) #only for targ2
+# #     print(valid_targets0, valid_targets1, valid_targets2)
 
-    weight0 = (1 / (torch.nn.functional.one_hot(valid_targets0).sum(dim=0) / valid_targets0.size(0) + torch.finfo(torch.float32).eps)).to(targets)
-    weight1 = (1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)).to(targets)
-    weight2 = (1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)).to(targets)
-#     print(weight0, weight1, weight2)
-    """
+#     weight0 = (1 / (torch.nn.functional.one_hot(valid_targets0).sum(dim=0) / valid_targets0.size(0) + torch.finfo(torch.float32).eps)).to(targets)
+#     weight1 = (1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)).to(targets)
+#     weight2 = (1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)).to(targets)
+# #     print(weight0, weight1, weight2)
+    
     
     dataset = ds.SequenceDataset(inputs=inputs, targets=targets)
     custom_dataloader = torch.utils.data.DataLoader(dataset, shuffle=False, batch_size=hparams.batch_size)
@@ -193,5 +194,5 @@ if __name__ == "__main__":
     X_resampled, y_resampled = smote_enn.fit_resample(X, y)
 #     print(X.shape, X_resampled.shape)
     print(smote_enn.sample_indices_)
-
+    """
 
