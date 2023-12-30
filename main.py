@@ -54,7 +54,8 @@ def get_args():
     parser.add_argument('--warm-up-split', type=int, default=5, help='warmup times')
     parser.add_argument('--scheduler', type=str, default="cosine", help='scheduler type')
     parser.add_argument('--accelerator', "-accl", type=str, default="gpu", help='accelerator type', choices=["cpu","gpu","tpu"])
-    parser.add_argument('--strategy', "-st", default="ddp", help='accelerator type', choices=["ddp_spawn","ddp","dp","ddp2","horovod","none", "auto"])
+    parser.add_argument('--strategy', "-st", default="ddp", help='accelerator type', choices=["ddp_spawn","ddp","dp","ddp2","horovod","none", "auto"]) 
+    parser.add_argument('--loss-weights', type=float, nargs="*", help='which loss to ignore during finetuing')
 
     #Misc.
     parser.add_argument('--seed', type=int, default=42, help='seeding number')
