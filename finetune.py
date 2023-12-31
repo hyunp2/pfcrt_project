@@ -388,9 +388,9 @@ class ProtBertClassifierFinetune(L.LightningModule):
             return losses.mean()
     
     def on_train_epoch_start(self, ) -> None:
-        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        self.metric_acc2 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc2 = torchmetrics.Accuracy(task="multiclass", num_classes=2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.train_outputs = collections.defaultdict(list)
 
     def training_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
@@ -449,9 +449,9 @@ class ProtBertClassifierFinetune(L.LightningModule):
         self.metric_acc2.reset()   
         
     def on_validation_epoch_start(self, ) -> None:
-        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        self.metric_acc2 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc2 = torchmetrics.Accuracy(task="multiclass", num_classes=2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.val_outputs = collections.defaultdict(list)
 
     def validation_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
@@ -518,9 +518,9 @@ class ProtBertClassifierFinetune(L.LightningModule):
             self.metric_acc2.reset()   
 
     def on_test_epoch_start(self, ) -> None:
-        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        self.metric_acc2 = torchmetrics.Accuracy(task="multiclass") if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc2 = torchmetrics.Accuracy(task="multiclass", num_classes=2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.test_outputs = collections.defaultdict(list)
 
     def test_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
