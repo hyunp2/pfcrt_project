@@ -39,6 +39,7 @@ class SequenceDataset(torch.utils.data.Dataset):
         token_type_ids = self.inputs["token_type_ids"][idx] #B, L
         attention_mask = self.inputs["attention_mask"][idx] #B, L
         input_reformats = {'input_ids': input_ids, 'token_type_ids': token_type_ids, 'attention_mask': attention_mask}
+        print(self.targets)
         target_reformats = {"labels": self.targets[idx]}
         return input_reformats, target_reformats
     
