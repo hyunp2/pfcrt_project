@@ -404,12 +404,16 @@ class ProtBertClassifierFinetune(L.LightningModule):
         y0 = y[:,0]
         y1 = y[:,1]
         y2 = y[:,2]
+        y0 = y0[y0 != self.hparam.fillna_val]
+        y1 = y1[y1 != self.hparam.fillna_val]
+        y2 = y2[y2 != self.hparam.fillna_val]
         y_hat0 = model_out["logits0"] #(B,3);(B,3),(B,2)
         y_hat1 = model_out["logits1"] #(B,3);(B,3),(B,2)
         y_hat2 = model_out["logits2"] #(B,3);(B,3),(B,2)
-        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y)
-        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
-        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
+        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y)[y0 != self.hparam.fillna_val]
+        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)[y1 != self.hparam.fillna_val]
+        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)[y2 != self.hparam.fillna_val]
+        
 
         train_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
         train_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
@@ -466,12 +470,15 @@ class ProtBertClassifierFinetune(L.LightningModule):
         y0 = y[:,0]
         y1 = y[:,1]
         y2 = y[:,2]
+        y0 = y0[y0 != self.hparam.fillna_val]
+        y1 = y1[y1 != self.hparam.fillna_val]
+        y2 = y2[y2 != self.hparam.fillna_val]
         y_hat0 = model_out["logits0"] #(B,3);(B,3),(B,2)
         y_hat1 = model_out["logits1"] #(B,3);(B,3),(B,2)
         y_hat2 = model_out["logits2"] #(B,3);(B,3),(B,2)
-        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y)
-        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
-        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
+        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y)[y0 != self.hparam.fillna_val]
+        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)[y1 != self.hparam.fillna_val]
+        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)[y2 != self.hparam.fillna_val]
 
         val_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
         val_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
@@ -534,12 +541,15 @@ class ProtBertClassifierFinetune(L.LightningModule):
         y0 = y[:,0]
         y1 = y[:,1]
         y2 = y[:,2]
+        y0 = y0[y0 != self.hparam.fillna_val]
+        y1 = y1[y1 != self.hparam.fillna_val]
+        y2 = y2[y2 != self.hparam.fillna_val]
         y_hat0 = model_out["logits0"] #(B,3);(B,3),(B,2)
         y_hat1 = model_out["logits1"] #(B,3);(B,3),(B,2)
         y_hat2 = model_out["logits2"] #(B,3);(B,3),(B,2)
-        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y)
-        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
-        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
+        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y)[y0 != self.hparam.fillna_val]
+        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)[y1 != self.hparam.fillna_val]
+        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)[y2 != self.hparam.fillna_val]
 
         test_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
         test_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
