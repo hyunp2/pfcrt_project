@@ -337,7 +337,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         word_embeddings = self.model(input_ids=input_ids, token_type_ids=token_type_ids,
                                            attention_mask=attention_mask)[0] #last_hidden_state
 
-        pooling = self.pool_strategy({"token_embeddings": word_embeddings,
+        pooling = ProtBertClassifierFinetune.pool_strategy({"token_embeddings": word_embeddings,
                                       "cls_token_embeddings": word_embeddings[:, 0],
                                       "attention_mask": attention_mask,
                                       }) 
@@ -616,6 +616,15 @@ class ProtBertClassifierFinetune(L.LightningModule):
 
         return [optimizer], [scheduler]
 
+    @staticmethod
+    def _get_split_sizes(train_frac: float, full_dataset: torch.utils.data.Dataset) -> Tuple[int, int, int]:
+        """DONE: Need to change split schemes!"""
+        len_full = len(full_dataset)
+        len_train = int(len_full * train_frac)
+#         len_test = int(0.1 * len_full)
+        len_val = len_full - len_train #- len_test
+        return len_train, len_val #, len_test  
+    
     def tokenizing(self, stage="train"):
         x = []
         for i in range(len(self.dataset)):
@@ -633,7 +642,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         targets = torch.from_numpy(targets).view(len(targets), -1).long().to(self.device) #target is originally list -> change to Tensor (B,1)
 
         dataset = dl.SequenceDataset(inputs, targets)
-        train, val = torch.utils.data.random_split(dataset, self._get_split_sizes(self.hparam.train_frac, dataset),
+        train, val = torch.utils.data.random_split(dataset, ProtBertClassifierFinetune._get_split_sizes(self.hparam.train_frac, dataset),
                                                                 generator=torch.Generator().manual_seed(0))
         
         if stage == "train":
