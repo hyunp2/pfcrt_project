@@ -23,7 +23,7 @@ class FocalLoss(nn.Module):
         self.ignore_index = ignore_index
 
     def forward(self, input, target):
-        assert input.dim() == 2 or input.dim() == 3:
+        assert input.dim() == 2 or input.dim() == 3, "input dimension should be either 2 or 3!"
 
         target = target.view(-1,1) #B,1
 #         mask = (target < self.threshold).view(-1)
