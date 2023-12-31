@@ -35,6 +35,7 @@ class FocalLoss(nn.Module):
         
         if self.ignore_index is not None:
             retain_these = target.view(-1, ) != self.ignore_index
+            print(retain_these)
             logpt = logpt[retain_these]
             target = target.view(-1, )[retain_these].view(-1, 1)
             
