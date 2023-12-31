@@ -641,6 +641,8 @@ class ProtBertClassifierFinetune(L.LightningModule):
         targets = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
         targets = torch.from_numpy(targets).view(len(targets), -1).long().to(self.device) #target is originally list -> change to Tensor (B,1)
 
+        print(targets)
+        
         dataset = dl.SequenceDataset(inputs, targets)
         train, val = torch.utils.data.random_split(dataset, ProtBertClassifierFinetune._get_split_sizes(self.hparam.train_frac, dataset),
                                                                 generator=torch.Generator().manual_seed(0))
