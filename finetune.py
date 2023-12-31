@@ -594,8 +594,8 @@ class ProtBertClassifierFinetune(L.LightningModule):
         [update_these_opt.append(optimizer_list[idx]) for idx in loss_weights_indices]
         
         parameters = [
+            # {"params": self.model.parameters(), "lr": self.hparam.learning_rate * 0.01},
             {"params": self.head.parameters(), "lr": self.hparam.learning_rate * 0.1},
-            {"params": self.model.parameters(), "lr": self.hparam.learning_rate * 0.01},
             *update_these_opt
         ] #Explicitly set which to optimize!
         
