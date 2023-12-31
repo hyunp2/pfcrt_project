@@ -620,7 +620,8 @@ class ProtBertClassifierFinetune(L.LightningModule):
         x = []
         for i in range(len(self.dataset)):
             seq = str(self.dataset.iloc[i,1])
-            seq = seq.split("")
+            # seq = seq.split("")
+            print(seq)
             x.append(' '.join(seq)) #AA Sequence
         proper_inputs = x #List[seq] of no. of elements (B,)
     
