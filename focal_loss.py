@@ -30,15 +30,19 @@ class FocalLoss(nn.Module):
 #         target = target[mask] #b,1
         
         logpt = F.log_softmax(input, dim=-1)
-        logpt = logpt.gather(1,target)
-        logpt = logpt.view(-1)
-        
+
         if self.ignore_index is not None:
             retain_these = target.view(-1, ) != self.ignore_index
-            print(retain_these)
             logpt = logpt[retain_these]
             target = target.view(-1, )[retain_these].view(-1, 1)
-            
+
+            logpt = logpt.gather(1,target)
+            logpt = logpt.view(-1)
+        else:
+            #target must have dropped nan (or ignore_index related values)
+            logpt = logpt.gather(1,target)
+            logpt = logpt.view(-1)
+        
         pt = logpt.data.exp() #non-diff
 
         if self.effective_num is not None:
