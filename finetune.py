@@ -419,7 +419,6 @@ class ProtBertClassifierFinetune(L.LightningModule):
         labels_hat1 = labels_hat1[y1 != self.hparam.fillna_val]
         labels_hat2 = labels_hat2[y2 != self.hparam.fillna_val]
         
-        
         train_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
         train_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
         train_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
@@ -475,6 +474,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         y0 = y[:,0]
         y1 = y[:,1]
         y2 = y[:,2]
+        print(y0.shape, y1.shape, y2.shape)
         y0 = y0[y0 != self.hparam.fillna_val]
         y1 = y1[y1 != self.hparam.fillna_val]
         y2 = y2[y2 != self.hparam.fillna_val]
@@ -484,6 +484,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y) 
         labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
         labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
+        print(labels_hat0.shape, labels_hat1.shape, labels_hat2.shape)
         labels_hat0 = labels_hat0[y0 != self.hparam.fillna_val]
         labels_hat1 = labels_hat1[y1 != self.hparam.fillna_val]
         labels_hat2 = labels_hat2[y2 != self.hparam.fillna_val]
@@ -504,7 +505,6 @@ class ProtBertClassifierFinetune(L.LightningModule):
 
         return {"val_loss": loss_val, "predY": predY, "dataY": dataY} #NEVER USE ORDEREDDICT!!!!
 
-        
     def on_validation_epoch_end(self, ) -> dict:
         if not self.trainer.sanity_checking:
             val_loss_mean = torch.stack(self.val_outputs["val_loss"], dim=0).to(self.device).mean()
@@ -549,6 +549,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         y0 = y[:,0]
         y1 = y[:,1]
         y2 = y[:,2]
+        print(y0.shape, y1.shape, y2.shape)
         y0 = y0[y0 != self.hparam.fillna_val]
         y1 = y1[y1 != self.hparam.fillna_val]
         y2 = y2[y2 != self.hparam.fillna_val]
@@ -558,6 +559,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y) 
         labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
         labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
+        print(labels_hat0.shape, labels_hat1.shape, labels_hat2.shape)
         labels_hat0 = labels_hat0[y0 != self.hparam.fillna_val]
         labels_hat1 = labels_hat1[y1 != self.hparam.fillna_val]
         labels_hat2 = labels_hat2[y2 != self.hparam.fillna_val]
