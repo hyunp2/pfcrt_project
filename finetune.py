@@ -490,9 +490,9 @@ class ProtBertClassifierFinetune(L.LightningModule):
         labels_hat1 = labels_hat1_[y1_ != self.hparam.fillna_val]
         labels_hat2 = labels_hat2_[y2_ != self.hparam.fillna_val]
         
-        train_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
-        train_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
-        train_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
+        val_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
+        val_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
+        val_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
         predY = np.stack([labels_hat0_.detach().cpu().numpy().reshape(-1), labels_hat1_.detach().cpu().numpy().reshape(-1), labels_hat2_.detach().cpu().numpy().reshape(-1)]).T #data,3
         dataY = np.stack([y0_.detach().cpu().numpy().reshape(-1), y1_.detach().cpu().numpy().reshape(-1), y2_.detach().cpu().numpy().reshape(-1)]).T #data,3
         
@@ -569,9 +569,9 @@ class ProtBertClassifierFinetune(L.LightningModule):
         labels_hat1 = labels_hat1_[y1_ != self.hparam.fillna_val]
         labels_hat2 = labels_hat2_[y2_ != self.hparam.fillna_val]
         
-        train_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
-        train_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
-        train_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
+        test_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
+        test_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
+        test_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
         predY = np.stack([labels_hat0_.detach().cpu().numpy().reshape(-1), labels_hat1_.detach().cpu().numpy().reshape(-1), labels_hat2_.detach().cpu().numpy().reshape(-1)]).T #data,3
         dataY = np.stack([y0_.detach().cpu().numpy().reshape(-1), y1_.detach().cpu().numpy().reshape(-1), y2_.detach().cpu().numpy().reshape(-1)]).T #data,3
 
