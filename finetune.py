@@ -401,27 +401,27 @@ class ProtBertClassifierFinetune(L.LightningModule):
         loss_train = self.loss(model_out, targets)
         
         y = targets["labels"].view(-1,3) #B3
-        y0 = y[:,0]
-        y1 = y[:,1]
-        y2 = y[:,2]
+        y0_ = y[:,0]
+        y1_ = y[:,1]
+        y2_ = y[:,2]
         y0 = y0_[y0_ != self.hparam.fillna_val]
         y1 = y1_[y1_ != self.hparam.fillna_val]
         y2 = y2_[y2_ != self.hparam.fillna_val]
         y_hat0 = model_out["logits0"] #(B,3);(B,3),(B,2)
         y_hat1 = model_out["logits1"] #(B,3);(B,3),(B,2)
         y_hat2 = model_out["logits2"] #(B,3);(B,3),(B,2)
-        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y) 
-        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
-        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
-        labels_hat0 = labels_hat0[y0_ != self.hparam.fillna_val]
-        labels_hat1 = labels_hat1[y1_ != self.hparam.fillna_val]
-        labels_hat2 = labels_hat2[y2_ != self.hparam.fillna_val]
+        labels_hat0_ = torch.argmax(y_hat0, dim=-1).to(y) 
+        labels_hat1_ = torch.argmax(y_hat1, dim=-1).to(y)
+        labels_hat2_ = torch.argmax(y_hat2, dim=-1).to(y)
+        labels_hat0 = labels_hat0_[y0_ != self.hparam.fillna_val]
+        labels_hat1 = labels_hat1_[y1_ != self.hparam.fillna_val]
+        labels_hat2 = labels_hat2_[y2_ != self.hparam.fillna_val]
         
         train_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
         train_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
         train_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
-        predY = np.stack([labels_hat0.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1)]).T #data,3
-        dataY = np.stack([y0.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1)]).T #data,3
+        predY = np.stack([labels_hat0_.detach().cpu().numpy().reshape(-1), labels_hat1_.detach().cpu().numpy().reshape(-1), labels_hat2_.detach().cpu().numpy().reshape(-1)]).T #data,3
+        dataY = np.stack([y0_.detach().cpu().numpy().reshape(-1), y1_.detach().cpu().numpy().reshape(-1), y2_.detach().cpu().numpy().reshape(-1)]).T #data,3
 
         output = {"train_loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2} #NEVER USE ORDEREDDICT!!!!
         self.wandb_run.log(output)
@@ -437,13 +437,18 @@ class ProtBertClassifierFinetune(L.LightningModule):
         train_predY = np.concatenate(self.train_outputs["predY"], axis=0)
         train_dataY = np.concatenate(self.train_outputs["dataY"], axis=0)
         
-        predy0, predy1, predy2 = train_predY[:,0], train_predY[:,1], train_predY[:,2]
+        predy0_, predy1_, predy2_ = train_predY[:,0], train_predY[:,1], train_predY[:,2]
+        predy0 = predy0_[predy0_ != self.hparam.fillna_val]
+        predy1 = predy1_[predy1_ != self.hparam.fillna_val]
+        predy2 = predy2_[predy2_ != self.hparam.fillna_val]
         datay0, datay1, datay2 = train_dataY[:,0], train_dataY[:,1], train_dataY[:,2]
-
+        predy0 = datay0[predy0_ != self.hparam.fillna_val]
+        predy1 = datay1[predy1_ != self.hparam.fillna_val]
+        predy2 = datay2[predy2_ != self.hparam.fillna_val]
         train_acc0 = balanced_accuracy_score(datay0, predy0)
         train_acc1 = balanced_accuracy_score(datay1, predy1)
         train_acc2 = balanced_accuracy_score(datay2, predy2)
-        
+    
         self.log("epoch", self.current_epoch)
         self.log("train_loss_mean", train_loss_mean, prog_bar=True)
 
@@ -478,18 +483,18 @@ class ProtBertClassifierFinetune(L.LightningModule):
         y_hat0 = model_out["logits0"] #(B,3);(B,3),(B,2)
         y_hat1 = model_out["logits1"] #(B,3);(B,3),(B,2)
         y_hat2 = model_out["logits2"] #(B,3);(B,3),(B,2)
-        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y) 
-        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
-        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
-        labels_hat0 = labels_hat0[y0_ != self.hparam.fillna_val]
-        labels_hat1 = labels_hat1[y1_ != self.hparam.fillna_val]
-        labels_hat2 = labels_hat2[y2_ != self.hparam.fillna_val]
-
-        val_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
-        val_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
-        val_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
-        predY = np.stack([labels_hat0.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1)]).T #data,3
-        dataY = np.stack([y0.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1)]).T #data,3
+        labels_hat0_ = torch.argmax(y_hat0, dim=-1).to(y) 
+        labels_hat1_ = torch.argmax(y_hat1, dim=-1).to(y)
+        labels_hat2_ = torch.argmax(y_hat2, dim=-1).to(y)
+        labels_hat0 = labels_hat0_[y0_ != self.hparam.fillna_val]
+        labels_hat1 = labels_hat1_[y1_ != self.hparam.fillna_val]
+        labels_hat2 = labels_hat2_[y2_ != self.hparam.fillna_val]
+        
+        train_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
+        train_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
+        train_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
+        predY = np.stack([labels_hat0_.detach().cpu().numpy().reshape(-1), labels_hat1_.detach().cpu().numpy().reshape(-1), labels_hat2_.detach().cpu().numpy().reshape(-1)]).T #data,3
+        dataY = np.stack([y0_.detach().cpu().numpy().reshape(-1), y1_.detach().cpu().numpy().reshape(-1), y2_.detach().cpu().numpy().reshape(-1)]).T #data,3
         
         output = {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2} #NEVER USE ORDEREDDICT!!!!
         self.log("val_loss", loss_val, prog_bar=True)
@@ -507,12 +512,18 @@ class ProtBertClassifierFinetune(L.LightningModule):
             val_predY = np.concatenate(self.val_outputs["predY"], axis=0)
             val_dataY = np.concatenate(self.val_outputs["dataY"], axis=0)
         
-            predy0, predy1, predy2 = val_predY[:,0], val_predY[:,1], val_predY[:,2]
+            predy0_, predy1_, predy2_ = val_predY[:,0], val_predY[:,1], val_predY[:,2]
+            predy0 = predy0_[predy0_ != self.hparam.fillna_val]
+            predy1 = predy1_[predy1_ != self.hparam.fillna_val]
+            predy2 = predy2_[predy2_ != self.hparam.fillna_val]
             datay0, datay1, datay2 = val_dataY[:,0], val_dataY[:,1], val_dataY[:,2]
+            predy0 = datay0[predy0_ != self.hparam.fillna_val]
+            predy1 = datay1[predy1_ != self.hparam.fillna_val]
+            predy2 = datay2[predy2_ != self.hparam.fillna_val]
             val_acc0 = balanced_accuracy_score(datay0, predy0)
             val_acc1 = balanced_accuracy_score(datay1, predy1)
             val_acc2 = balanced_accuracy_score(datay2, predy2)
-            
+        
             self.log("val_loss_mean", val_loss_mean, prog_bar=True)
             #For ModelCheckpoint Metric, something is wrong with using numbers at the end of string: e.g. epoch_val_acc0
             #https://pytorch-lightning.readthedocs.io/en/stable/_modules/pytorch_lightning/callbacks/model_checkpoint.html#:~:text=filename%20%3D%20filename.replace(group%2C%20f%22%7B%7B0%5B%7Bname%7D%5D%22)
@@ -542,27 +553,27 @@ class ProtBertClassifierFinetune(L.LightningModule):
         loss_test = self.loss(model_out, targets)
         
         y = targets["labels"].view(-1,3) #B3
-        y0 = y[:,0]
-        y1 = y[:,1]
-        y2 = y[:,2]
+        y0_ = y[:,0]
+        y1_ = y[:,1]
+        y2_ = y[:,2]
         y0 = y0_[y0_ != self.hparam.fillna_val]
         y1 = y1_[y1_ != self.hparam.fillna_val]
         y2 = y2_[y2_ != self.hparam.fillna_val]
         y_hat0 = model_out["logits0"] #(B,3);(B,3),(B,2)
         y_hat1 = model_out["logits1"] #(B,3);(B,3),(B,2)
         y_hat2 = model_out["logits2"] #(B,3);(B,3),(B,2)
-        labels_hat0 = torch.argmax(y_hat0, dim=-1).to(y) 
-        labels_hat1 = torch.argmax(y_hat1, dim=-1).to(y)
-        labels_hat2 = torch.argmax(y_hat2, dim=-1).to(y)
-        labels_hat0 = labels_hat0[y0_ != self.hparam.fillna_val]
-        labels_hat1 = labels_hat1[y1_ != self.hparam.fillna_val]
-        labels_hat2 = labels_hat2[y2_ != self.hparam.fillna_val]
-
-        test_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
-        test_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
-        test_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
-        predY = np.stack([labels_hat0.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1)]).T #data,3
-        dataY = np.stack([y0.detach().cpu().numpy().reshape(-1), y1.detach().cpu().numpy().reshape(-1), y2.detach().cpu().numpy().reshape(-1)]).T #data,3
+        labels_hat0_ = torch.argmax(y_hat0, dim=-1).to(y) 
+        labels_hat1_ = torch.argmax(y_hat1, dim=-1).to(y)
+        labels_hat2_ = torch.argmax(y_hat2, dim=-1).to(y)
+        labels_hat0 = labels_hat0_[y0_ != self.hparam.fillna_val]
+        labels_hat1 = labels_hat1_[y1_ != self.hparam.fillna_val]
+        labels_hat2 = labels_hat2_[y2_ != self.hparam.fillna_val]
+        
+        train_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
+        train_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
+        train_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
+        predY = np.stack([labels_hat0_.detach().cpu().numpy().reshape(-1), labels_hat1_.detach().cpu().numpy().reshape(-1), labels_hat2_.detach().cpu().numpy().reshape(-1)]).T #data,3
+        dataY = np.stack([y0_.detach().cpu().numpy().reshape(-1), y1_.detach().cpu().numpy().reshape(-1), y2_.detach().cpu().numpy().reshape(-1)]).T #data,3
 
         output = {"test_loss": loss_test, "test_acc0": test_acc0, "test_acc1": test_acc1, "test_acc2": test_acc2} #NEVER USE ORDEREDDICT!!!!
         self.wandb_run.log(output)
@@ -578,8 +589,14 @@ class ProtBertClassifierFinetune(L.LightningModule):
         test_predY = np.concatenate(self.test_outputs["predY"], axis=0)
         test_dataY = np.concatenate(self.test_outputs["dataY"], axis=0)
         
-        predy0, predy1, predy2 = test_predY[:,0], test_predY[:,1], test_predY[:,2]
+        predy0_, predy1_, predy2_ = test_predY[:,0], test_predY[:,1], test_predY[:,2]
+        predy0 = predy0_[predy0_ != self.hparam.fillna_val]
+        predy1 = predy1_[predy1_ != self.hparam.fillna_val]
+        predy2 = predy2_[predy2_ != self.hparam.fillna_val]
         datay0, datay1, datay2 = test_dataY[:,0], test_dataY[:,1], test_dataY[:,2]
+        predy0 = datay0[predy0_ != self.hparam.fillna_val]
+        predy1 = datay1[predy1_ != self.hparam.fillna_val]
+        predy2 = datay2[predy2_ != self.hparam.fillna_val]
         test_acc0 = balanced_accuracy_score(datay0, predy0)
         test_acc1 = balanced_accuracy_score(datay1, predy1)
         test_acc2 = balanced_accuracy_score(datay2, predy2)
