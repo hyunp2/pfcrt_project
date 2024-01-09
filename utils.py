@@ -58,7 +58,7 @@ class ModelAnalyzer(object):
 
     def get_predictions(self, ):
         """call test_step function of pl.LightningModule"""
-        csv_logger = pl.loggers.CSVLogger(save_dir=self.hparam.load_model_directory)
+        csv_logger = L.pytorch.loggers.CSVLogger(save_dir=self.hparam.load_model_directory)
         trainer = pl.Trainer(devices=self.hparam.ngpus, accelerator=self.hparam.accelerator, logger=[csv_logger])
         trainer.test(self.model, self.dmo) #Get loss and acc
 
