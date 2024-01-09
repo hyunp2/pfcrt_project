@@ -614,6 +614,84 @@ class ProtBertClassifierFinetune(L.LightningModule):
         artifact.add_file(str(path_and_name)) #which directory's file to add; when downloading it downloads directory/file
         self.wandb_run.log_artifact(artifact)
 
+    def on_predict_epoch_start(self, ) -> None:
+        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc2 = torchmetrics.Accuracy(task="multiclass", num_classes=2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.predict_outputs = collections.defaultdict(list)
+
+    def predict_step(self, batch: tuple, batch_nb: int, *args, **kwargs) -> dict:
+
+        inputs, targets = batch
+        model_out = self.forward(**inputs)
+        #print(model_out.size(), targets["labels"].size())
+        loss_pred = self.loss(model_out, targets)
+        
+        y = targets["labels"].view(-1,3) #B3
+        y0_ = y[:,0]
+        y1_ = y[:,1]
+        y2_ = y[:,2]
+        y0 = y0_[y0_ != self.hparam.fillna_val]
+        y1 = y1_[y1_ != self.hparam.fillna_val]
+        y2 = y2_[y2_ != self.hparam.fillna_val]
+        y_hat0 = model_out["logits0"] #(B,3);(B,3),(B,2)
+        y_hat1 = model_out["logits1"] #(B,3);(B,3),(B,2)
+        y_hat2 = model_out["logits2"] #(B,3);(B,3),(B,2)
+        labels_hat0_ = torch.argmax(y_hat0, dim=-1).to(y) 
+        labels_hat1_ = torch.argmax(y_hat1, dim=-1).to(y)
+        labels_hat2_ = torch.argmax(y_hat2, dim=-1).to(y)
+        labels_hat0 = labels_hat0_[y0_ != self.hparam.fillna_val]
+        labels_hat1 = labels_hat1_[y1_ != self.hparam.fillna_val]
+        labels_hat2 = labels_hat2_[y2_ != self.hparam.fillna_val]
+        
+        pred_acc0 = balanced_accuracy_score(y0.detach().cpu().numpy().reshape(-1), labels_hat0.detach().cpu().numpy().reshape(-1))
+        pred_acc1 = balanced_accuracy_score(y1.detach().cpu().numpy().reshape(-1), labels_hat1.detach().cpu().numpy().reshape(-1))
+        pred_acc2 = balanced_accuracy_score(y2.detach().cpu().numpy().reshape(-1), labels_hat2.detach().cpu().numpy().reshape(-1))
+        predY = np.stack([labels_hat0_.detach().cpu().numpy().reshape(-1), labels_hat1_.detach().cpu().numpy().reshape(-1), labels_hat2_.detach().cpu().numpy().reshape(-1)]).T #data,3
+        dataY = np.stack([y0_.detach().cpu().numpy().reshape(-1), y1_.detach().cpu().numpy().reshape(-1), y2_.detach().cpu().numpy().reshape(-1)]).T #data,3
+
+        output = {"pred_loss": loss_pred, "pred_acc0": pred_acc0, "pred_acc1": pred_acc1, "pred_acc2": pred_acc2} #NEVER USE ORDEREDDICT!!!!
+        self.wandb_run.log(output)
+
+        self.predict_outputs["pred_loss"].append(loss_pred)
+        self.predict_outputs["predY"].append(predY)
+        self.predict_outputs["dataY"].append(dataY)
+        
+        return {"pred_loss": loss_pred, "predY": predY, "dataY": dataY}
+
+    def on_predict_epoch_end(self, ) -> dict:
+        pred_loss_mean = torch.stack(self.predict_outputs["pred_loss"], dim=0).to(self.device).mean()
+        pred_predY = np.concatenate(self.predict_outputs["predY"], axis=0)
+        pred_dataY = np.concatenate(self.predict_outputs["dataY"], axis=0)
+        
+        predy0_, predy1_, predy2_ = pred_predY[:,0], pred_predY[:,1], pred_predY[:,2]
+        predy0 = predy0_[predy0_ != self.hparam.fillna_val]
+        predy1 = predy1_[predy1_ != self.hparam.fillna_val]
+        predy2 = predy2_[predy2_ != self.hparam.fillna_val]
+        datay0, datay1, datay2 = test_dataY[:,0], test_dataY[:,1], test_dataY[:,2]
+        predy0 = datay0[predy0_ != self.hparam.fillna_val]
+        predy1 = datay1[predy1_ != self.hparam.fillna_val]
+        predy2 = datay2[predy2_ != self.hparam.fillna_val]
+        test_acc0 = balanced_accuracy_score(datay0, predy0)
+        test_acc1 = balanced_accuracy_score(datay1, predy1)
+        test_acc2 = balanced_accuracy_score(datay2, predy2)
+        
+        self.log("pred_loss_mean", pred_loss_mean, prog_bar=True)
+        tqdm_dict = {"epoch_pred_loss": pred_loss_mean, "epoch_pred_acc0": pred_acc0, "epoch_pred_acc1": pred_acc1, "epoch_pred_acc2": pred_acc2}
+        
+        self.wandb_run.log(tqdm_dict)
+        self.metric_acc0.reset()   
+        self.metric_acc1.reset()   
+        self.metric_acc2.reset()   
+        
+        artifact = wandb.Artifact(name="finetune", type="torch_model")
+        path_and_name = os.path.join(self.hparam.load_model_directory, self.hparam.load_model_checkpoint)
+        artifact.add_file(str(path_and_name)) #which directory's file to add; when downloading it downloads directory/file
+        self.wandb_run.log_artifact(artifact)
+
+        print("ML prediction:", pred_predY)
+        print("Real data:", pred_dataY)
+
     def configure_optimizers(self):
         """ Sets different Learning rates for different parameter groups. """
 
