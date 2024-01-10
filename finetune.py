@@ -771,7 +771,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         self._train_dataset = self.tokenizing(stage="train")
         return DataLoader(
             dataset=self._train_dataset,
-            sampler=torch.utils.data.RandomSampler(self._train_dataset),
+            sampler=torch.utils.data.RandomSampler(self._train_dataset) if not self.hparam.pred else None,
             batch_size=self.hparam.batch_size,
             num_workers=self.hparam.num_workers,
         )
