@@ -668,7 +668,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         predy0 = predy0_[predy0_ != self.hparam.fillna_val]
         predy1 = predy1_[predy1_ != self.hparam.fillna_val]
         predy2 = predy2_[predy2_ != self.hparam.fillna_val]
-        datay0, datay1, datay2 = test_dataY[:,0], test_dataY[:,1], test_dataY[:,2]
+        datay0, datay1, datay2 = pred_dataY[:,0], pred_dataY[:,1], pred_dataY[:,2]
         predy0 = datay0[predy0_ != self.hparam.fillna_val]
         predy1 = datay1[predy1_ != self.hparam.fillna_val]
         predy2 = datay2[predy2_ != self.hparam.fillna_val]
