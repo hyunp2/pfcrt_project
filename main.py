@@ -38,6 +38,7 @@ def get_args():
                         help='name to save/load atfifact checkpoint..., this is the name of SAVED model (e.g. epoch=50-val_loss=20.ckpt) py PL')  
     parser.add_argument('--model_name', type=str, default='Rostlab/prot_bert', help='HUGGINGFACE Backbone model name card')
     parser.add_argument('--finetune', action="store_true")
+    parser.add_argument('--pred', action="store_true")
 
     #Molecule (Dataloader) related
     parser.add_argument('--load_data_directory', "-dird", default="data", help='This is where data is located...')  
