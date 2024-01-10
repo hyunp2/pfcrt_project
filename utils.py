@@ -190,7 +190,7 @@ class ModelAnalyzer(object):
 
 
 if __name__ == "__main__":
-    from train import get_args
+    from main import get_args
     hparam = get_args()
     modelanalyzer = ModelAnalyzer(hparam=hparam)
     modelanalyzer.get_predictions()
