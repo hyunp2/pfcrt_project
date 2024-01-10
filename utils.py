@@ -60,13 +60,13 @@ class ModelAnalyzer(object):
     def get_predictions(self, ):
         """call test_step function of pl.LightningModule"""
         csv_logger = L.pytorch.loggers.CSVLogger(save_dir=self.hparam.load_model_directory)
-        trainer = L.Trainer(devices=self.hparam.ngpus, accelerator=self.hparam.accelerator, strategy=self.hparams.strategy, logger=[csv_logger])
+        trainer = L.Trainer(devices=self.hparam.ngpus, accelerator=self.hparam.accelerator, strategy=self.hparam.strategy, logger=[csv_logger])
 
-        w0, w1, w2 = self.hparams.loss_weights
+        w0, w1, w2 = self.hparam.loss_weights
         for c, w in enumerate([w0, w1, w2]):
             if w == 1:
                 break
-        assert int(self.hparams.load_model_directory[-1]) == c, "directory last digit must match loss_weights non-zero index"
+        assert int(self.hparam.load_model_directory[-1]) == c, "directory last digit must match loss_weights non-zero index"
         
         trainer.predict(self.model, [self.dmo_train, self.dmo_test]) #Get loss and acc
         #[Jan 9th 2024] git pull && python -m utils --ngpus 1 --accelerator gpu --strategy auto -b 512 --finetune --loss_weights 0 1 0 --load_model_directory output_finetune_l1 --load_model_checkpoint best_pretrained.ckpt
