@@ -651,7 +651,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         dataY = np.stack([y0_.detach().cpu().numpy().reshape(-1), y1_.detach().cpu().numpy().reshape(-1), y2_.detach().cpu().numpy().reshape(-1)]).T #data,3
 
         output = {"pred_loss": loss_pred, "pred_acc0": pred_acc0, "pred_acc1": pred_acc1, "pred_acc2": pred_acc2} #NEVER USE ORDEREDDICT!!!!
-        self.wandb_run.log(output)
+        # self.wandb_run.log(output)
 
         self.predict_outputs["pred_loss"].append(loss_pred)
         self.predict_outputs["predY"].append(predY)
@@ -684,10 +684,10 @@ class ProtBertClassifierFinetune(L.LightningModule):
         self.metric_acc1.reset()   
         self.metric_acc2.reset()   
         
-        artifact = wandb.Artifact(name="finetune", type="torch_model")
-        path_and_name = os.path.join(self.hparam.load_model_directory, self.hparam.load_model_checkpoint)
-        artifact.add_file(str(path_and_name)) #which directory's file to add; when downloading it downloads directory/file
-        self.wandb_run.log_artifact(artifact)
+        # artifact = wandb.Artifact(name="finetune", type="torch_model")
+        # path_and_name = os.path.join(self.hparam.load_model_directory, self.hparam.load_model_checkpoint)
+        # artifact.add_file(str(path_and_name)) #which directory's file to add; when downloading it downloads directory/file
+        # self.wandb_run.log_artifact(artifact)
 
         print("ML prediction:", pred_predY)
         print("Real data:", pred_dataY)
