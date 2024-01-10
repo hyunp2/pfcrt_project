@@ -39,7 +39,8 @@ class ModelAnalyzer(object):
                                                                                                 hparam.load_model_checkpoint), hparam=hparam)
         self.model.freeze()
         self.tokenizer = self.model.tokenizer
-        self.dmo = self.model.test_dataloader() #Test dataloader instance
+        self.dmo_train = self.model.train_dataloader() #Test dataloader instance
+        self.dmo_test = self.model.test_dataloader() #Test dataloader instance
 
         wandb.init(project="DL_Sequence_Collab", entity="hyunp2")
         #self.test_dataset = self.model._test_dataset #Original Test Data"SET" instance (different from dataloader ... called after calling dmo)
@@ -59,8 +60,16 @@ class ModelAnalyzer(object):
     def get_predictions(self, ):
         """call test_step function of pl.LightningModule"""
         csv_logger = L.pytorch.loggers.CSVLogger(save_dir=self.hparam.load_model_directory)
-        trainer = pl.Trainer(devices=self.hparam.ngpus, accelerator=self.hparam.accelerator, logger=[csv_logger])
-        trainer.test(self.model, self.dmo) #Get loss and acc
+        trainer = pl.Trainer(devices=self.hparam.ngpus, accelerator=self.hparam.accelerator, strategy=self.hparams.strategy, logger=[csv_logger])
+
+        w0, w1, w2 = self.hparams.loss_weights
+        for c, w in enumerate([w0, w1, w2]):
+            if w == 1:
+                break
+        assert int(self.hparams.load_model_directory[-1]) == c, "directory last digit must match loss_weights non-zero index"
+        
+        trainer.predict(self.model, [self.dmo_train, self.dmo_test]) #Get loss and acc
+        #[Jan 9th 2024] git pull && python -m utils --ngpus 1 --accelerator gpu --strategy auto -b 512 --finetune --loss_weights 0 1 0 --load_model_directory output_finetune_l1 --load_model_checkpoint best_pretrained.ckpt
 
     def get_highlights(self, attribute="saliency", normed=False, inputs: torch.Tensor =None, tgt_idx: int = 0, additional_forward_args = None):
         """Most important residues are highlighted
@@ -191,3 +200,6 @@ if __name__ == "__main__":
 #     ans = modelanalyzer.get_highlights(attribute="layer_integrated_gradients", inputs=input_ids, tgt_idx=target["labels"].view(-1,), additional_forward_args=(batch["token_type_ids"], batch["attention_mask"], False))
 #     modelanalyzer.get_statistics_latents()
     #python -m utils -ls 0.1 -b 512 -ckpt epoch=143-train_loss_mean=0.66-val_loss_mean=0.76.ckpt --finetune --accelerator gpu --ngpus auto
+
+#[Jan 9th 2024] git pull && python -m utils --ngpus 1 --accelerator gpu --strategy auto -b 512 --finetune --loss_weights 0 1 0 --load_model_directory output_finetune_l1 --load_model_checkpoint best_pretrained.ckpt
+
