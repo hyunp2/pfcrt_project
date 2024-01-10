@@ -676,7 +676,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         test_acc1 = balanced_accuracy_score(datay1, predy1)
         test_acc2 = balanced_accuracy_score(datay2, predy2)
         
-        self.log("pred_loss_mean", pred_loss_mean, prog_bar=True)
+        # self.log("pred_loss_mean", pred_loss_mean, prog_bar=True)
         tqdm_dict = {"epoch_pred_loss": pred_loss_mean, "epoch_pred_acc0": pred_acc0, "epoch_pred_acc1": pred_acc1, "epoch_pred_acc2": pred_acc2}
         
         self.wandb_run.log(tqdm_dict)
