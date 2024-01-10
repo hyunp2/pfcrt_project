@@ -60,7 +60,7 @@ class ModelAnalyzer(object):
     def get_predictions(self, ):
         """call test_step function of pl.LightningModule"""
         csv_logger = L.pytorch.loggers.CSVLogger(save_dir=self.hparam.load_model_directory)
-        trainer = pl.Trainer(devices=self.hparam.ngpus, accelerator=self.hparam.accelerator, strategy=self.hparams.strategy, logger=[csv_logger])
+        trainer = L.Trainer(devices=self.hparam.ngpus, accelerator=self.hparam.accelerator, strategy=self.hparams.strategy, logger=[csv_logger])
 
         w0, w1, w2 = self.hparams.loss_weights
         for c, w in enumerate([w0, w1, w2]):
