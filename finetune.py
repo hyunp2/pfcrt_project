@@ -442,9 +442,9 @@ class ProtBertClassifierFinetune(L.LightningModule):
         predy0 = predy0_[datay0_ != self.hparam.fillna_val]
         predy1 = predy1_[datay1_ != self.hparam.fillna_val]
         predy2 = predy2_[datay2_ != self.hparam.fillna_val]
-        predy0 = datay0[datay0_ != self.hparam.fillna_val]
-        predy1 = datay1[datay1_ != self.hparam.fillna_val]
-        predy2 = datay2[datay2_ != self.hparam.fillna_val]
+        predy0 = datay0_[datay0_ != self.hparam.fillna_val]
+        predy1 = datay1_[datay1_ != self.hparam.fillna_val]
+        predy2 = datay2_[datay2_ != self.hparam.fillna_val]
         train_acc0 = balanced_accuracy_score(datay0, predy0)
         train_acc1 = balanced_accuracy_score(datay1, predy1)
         train_acc2 = balanced_accuracy_score(datay2, predy2)
@@ -517,9 +517,9 @@ class ProtBertClassifierFinetune(L.LightningModule):
             predy0 = predy0_[datay0_ != self.hparam.fillna_val]
             predy1 = predy1_[datay1_ != self.hparam.fillna_val]
             predy2 = predy2_[datay2_ != self.hparam.fillna_val]
-            predy0 = datay0[datay0_ != self.hparam.fillna_val]
-            predy1 = datay1[datay1_ != self.hparam.fillna_val]
-            predy2 = datay2[datay2_ != self.hparam.fillna_val]
+            predy0 = datay0_[datay0_ != self.hparam.fillna_val]
+            predy1 = datay1_[datay1_ != self.hparam.fillna_val]
+            predy2 = datay2_[datay2_ != self.hparam.fillna_val]
             val_acc0 = balanced_accuracy_score(datay0, predy0)
             val_acc1 = balanced_accuracy_score(datay1, predy1)
             val_acc2 = balanced_accuracy_score(datay2, predy2)
@@ -594,9 +594,9 @@ class ProtBertClassifierFinetune(L.LightningModule):
         predy0 = predy0_[datay0_ != self.hparam.fillna_val]
         predy1 = predy1_[datay1_ != self.hparam.fillna_val]
         predy2 = predy2_[datay2_ != self.hparam.fillna_val]
-        predy0 = datay0[datay0_ != self.hparam.fillna_val]
-        predy1 = datay1[datay1_ != self.hparam.fillna_val]
-        predy2 = datay2[datay2_ != self.hparam.fillna_val]
+        predy0 = datay0_[datay0_ != self.hparam.fillna_val]
+        predy1 = datay1_[datay1_ != self.hparam.fillna_val]
+        predy2 = datay2_[datay2_ != self.hparam.fillna_val]
         test_acc0 = balanced_accuracy_score(datay0, predy0)
         test_acc1 = balanced_accuracy_score(datay1, predy1)
         test_acc2 = balanced_accuracy_score(datay2, predy2)
@@ -669,9 +669,9 @@ class ProtBertClassifierFinetune(L.LightningModule):
         predy0 = predy0_[datay0_ != self.hparam.fillna_val]
         predy1 = predy1_[datay1_ != self.hparam.fillna_val]
         predy2 = predy2_[datay2_ != self.hparam.fillna_val]
-        predy0 = datay0[datay0_ != self.hparam.fillna_val]
-        predy1 = datay1[datay1_ != self.hparam.fillna_val]
-        predy2 = datay2[datay2_ != self.hparam.fillna_val]
+        predy0 = datay0_[datay0_ != self.hparam.fillna_val]
+        predy1 = datay1_[datay1_ != self.hparam.fillna_val]
+        predy2 = datay2_[datay2_ != self.hparam.fillna_val]
         pred_acc0 = balanced_accuracy_score(datay0, predy0)
         pred_acc1 = balanced_accuracy_score(datay1, predy1)
         pred_acc2 = balanced_accuracy_score(datay2, predy2)
