@@ -111,7 +111,7 @@ def _main():
     #  -------------------------------
     # initialize Model Checkpoint Saver
     checkpoint_callback = L.pytorch.callbacks.ModelCheckpoint(
-    filename="{epoch}-{val_loss_mean:.2f}",
+    filename="{epoch}-{val_acc_mean:.2f}" if "acc" in hparams.monitor else "{epoch}-{val_loss_mean:.2f}",
     save_top_k=hparams.save_top_k,
     verbose=True,
     monitor=hparams.monitor,
