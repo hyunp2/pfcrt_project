@@ -523,8 +523,15 @@ class ProtBertClassifierFinetune(L.LightningModule):
             val_acc0 = balanced_accuracy_score(datay0, predy0)
             val_acc1 = balanced_accuracy_score(datay1, predy1)
             val_acc2 = balanced_accuracy_score(datay2, predy2)
-        
+
+            for c, w in enumerate(self.hparam.loss_weights):
+                if w == 1:
+                    break
+            val_acc_mean = [val_acc0, val_acc1, val_acc2][c]
+            
             self.log("val_loss_mean", val_loss_mean, prog_bar=True)
+            self.log("val_acc_mean", val_acc_mean, prog_bar=True)
+
             #For ModelCheckpoint Metric, something is wrong with using numbers at the end of string: e.g. epoch_val_acc0
             #https://pytorch-lightning.readthedocs.io/en/stable/_modules/pytorch_lightning/callbacks/model_checkpoint.html#:~:text=filename%20%3D%20filename.replace(group%2C%20f%22%7B%7B0%5B%7Bname%7D%5D%22)
             self.log("epoch_val_acc_A", val_acc0, prog_bar=True)
