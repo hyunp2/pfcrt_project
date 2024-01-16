@@ -595,7 +595,7 @@ class ProtBertClassifier(L.LightningModule):
         targets = self.dataset[stage]["label"] #list type
         targets = torch.Tensor(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
         
-        dataset = dl.SequenceDatasetPretrain(inputs, targets)
+        dataset = dl.SequenceDataset(inputs, targets)
         return dataset #torch Dataset
 
     def train_dataloader(self) -> DataLoader:
