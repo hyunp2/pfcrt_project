@@ -24,7 +24,25 @@ from typing import *
 #https://github.com/HelloJocelynLu/t5chem/blob/main/t5chem/archived/MultiTask.py for more info
 # collections.Counter(dataset["test"]["label"])
 
-class SequenceDataset(torch.utils.data.Dataset):
+class SequenceDatasetPretrain(torch.utils.data.Dataset):
+    """Protein sequence dataset"""
+    def __init__(self, inputs: Dict[str, torch.Tensor], targets: torch.Tensor) -> torch.utils.data.Dataset:
+        super().__init__()
+        self.inputs = inputs
+        self.targets = targets
+    
+    def __len__(self):
+        return len(self.targets) #train length...
+
+    def __getitem__(self, idx):
+        input_ids = self.inputs["input_ids"][idx] #B, L
+        token_type_ids = self.inputs["token_type_ids"][idx] #B, L
+        attention_mask = self.inputs["attention_mask"][idx] #B, L
+        input_reformats = {'input_ids': input_ids, 'token_type_ids': token_type_ids, 'attention_mask': attention_mask}
+        target_reformats = {"labels": self.targets[idx]}
+        return input_reformats, target_reformats
+
+class SequenceDatasetFinetune(torch.utils.data.Dataset):
     """Protein sequence dataset"""
     def __init__(self, inputs: Dict[str, torch.Tensor], targets: torch.Tensor, isos: torch.BoolTensor) -> torch.utils.data.Dataset:
         super().__init__()
