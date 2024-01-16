@@ -42,10 +42,9 @@ class DataParser(object):
             return data
         elif drop_duplicate_on != None:
             data = self.data.loc[:,col_names].drop_duplicates(drop_duplicate_on)
-            data = data.replace([{"PPQ Resistance": 2.0}, , "CQ Resistance": 2.0}], 1.0) #-> convert to binary
+            data = data.replace([{"PPQ Resistance": 2.0}, "CQ Resistance": 2.0}], 1.0) #-> convert to binary
             data.fillna(value=fill_na, inplace=True) 
             data.dropna(axis=0, inplace=dropna)
-            data.loc[:, ["PPQ Resistance", "CQ Resistance"]].replace(2.0, 1.0) #-> convert to binary
             return data
         
     
