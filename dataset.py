@@ -24,7 +24,7 @@ from typing import *
 #https://github.com/HelloJocelynLu/t5chem/blob/main/t5chem/archived/MultiTask.py for more info
 # collections.Counter(dataset["test"]["label"])
 
-class SequenceDatasetPretrain(torch.utils.data.Dataset):
+class SequenceDataset(torch.utils.data.Dataset):
     """Protein sequence dataset"""
     def __init__(self, inputs: Dict[str, torch.Tensor], targets: torch.Tensor) -> torch.utils.data.Dataset:
         super().__init__()
@@ -41,26 +41,6 @@ class SequenceDatasetPretrain(torch.utils.data.Dataset):
         input_reformats = {'input_ids': input_ids, 'token_type_ids': token_type_ids, 'attention_mask': attention_mask}
         target_reformats = {"labels": self.targets[idx]}
         return input_reformats, target_reformats
-
-class SequenceDatasetFinetune(torch.utils.data.Dataset):
-    """Protein sequence dataset"""
-    def __init__(self, inputs: Dict[str, torch.Tensor], targets: torch.Tensor, isos: torch.BoolTensor) -> torch.utils.data.Dataset:
-        super().__init__()
-        self.inputs = inputs
-        self.targets = targets
-        self.isos = isos
-    
-    def __len__(self):
-        return len(self.targets) #train length...
-
-    def __getitem__(self, idx):
-        input_ids = self.inputs["input_ids"][idx] #B, L
-        token_type_ids = self.inputs["token_type_ids"][idx] #B, L
-        attention_mask = self.inputs["attention_mask"][idx] #B, L
-        input_reformats = {'input_ids': input_ids, 'token_type_ids': token_type_ids, 'attention_mask': attention_mask}
-        target_reformats = {"labels": self.targets[idx]}
-        isos_reformats = {"isos": self.isos[idx]}
-        return input_reformats, target_reformats, isos_reformats
     
 class NERSequenceDataset(torch.utils.data.Dataset):
     """Protein sequence dataset
