@@ -767,7 +767,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
                                           truncation=True, return_tensors="pt",
                                           max_length=self.hparam.max_length) #Tokenize inputs as a dict type of Tensors
 
-        dataset = dl.SequenceDatasetFinetune(inputs, targets)
+        dataset = dl.SequenceDataset(inputs, targets)
         train, val = torch.utils.data.random_split(dataset, ProtBertClassifierFinetune._get_split_sizes(self.hparam.train_frac, dataset),
                                                                 generator=torch.Generator().manual_seed(0))
         
