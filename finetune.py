@@ -773,12 +773,13 @@ class ProtBertClassifierFinetune(L.LightningModule):
             seq = str(self.dataset.iloc[i,1])
             # seq = seq.split("")
             x.append(' '.join([_ for _ in seq])) #AA Sequence
+            
         proper_inputs = x #List[seq] of no. of elements (B,)
         isos: torch.BoolTensor = torch.BoolTensor(isos)
         targets: np.ndarray = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
 
-        train, val = _tokenize_and_split(proper_inputs, targets, isos)
-        test = _tokenize_and_split(proper_inputs, targets, ~isos, split=False)
+        train, val = self._tokenize_and_split(proper_inputs, targets, isos)
+        test = self._tokenize_and_split(proper_inputs, targets, ~isos, split=False)
         
         if stage == "train":
             dataset = train
