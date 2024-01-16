@@ -746,12 +746,16 @@ class ProtBertClassifierFinetune(L.LightningModule):
     
     def tokenizing(self, stage="train"):
         x = []
+        isos = []
         for i in range(len(self.dataset)):
+            isoform = "F145I" in str(self.dataset.iloc[i,0]) #WIP! don't explicitly set this!
+            if isoform: isos.append(i)                
             seq = str(self.dataset.iloc[i,1])
             # seq = seq.split("")
             x.append(' '.join([_ for _ in seq])) #AA Sequence
         proper_inputs = x #List[seq] of no. of elements (B,)
-    
+        isos: torch.BoolTensor = torch.BoolTensor(isos)
+        
         inputs = self.tokenizer.batch_encode_plus(proper_inputs,
                                           add_special_tokens=True,
                                           padding=True,
@@ -760,7 +764,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         targets = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
         targets = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
         
-        dataset = dl.SequenceDataset(inputs, targets)
+        dataset = dl.SequenceDataset(inputs, targets, isos)
         train, val = torch.utils.data.random_split(dataset, ProtBertClassifierFinetune._get_split_sizes(self.hparam.train_frac, dataset),
                                                                 generator=torch.Generator().manual_seed(0))
         
