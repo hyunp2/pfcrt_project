@@ -38,13 +38,13 @@ class DataParser(object):
             data = self.data.loc[:,col_names]
             data.fillna(value=fill_na, inplace=True)
             data.dropna(axis=0, inplace=dropna)
-            data.loc[:, ["PPQ Resistance", "CQ Resistance"]].replace(2, 1, inplace=True) #-> convert to binary
+            data.loc[:, ["PPQ Resistance", "CQ Resistance"]].replace(2.0, 1.0, inplace=True) #-> convert to binary
             return data
         elif drop_duplicate_on != None:
             data = self.data.loc[:,col_names].drop_duplicates(drop_duplicate_on)
             data.fillna(value=fill_na, inplace=True) 
             data.dropna(axis=0, inplace=dropna)
-            data.loc[:, ["PPQ Resistance", "CQ Resistance"]].replace(2, 1, inplace=True) #-> convert to binary
+            data.loc[:, ["PPQ Resistance", "CQ Resistance"]].replace(2.0, 1.0, inplace=True) #-> convert to binary
             return data
         
     
