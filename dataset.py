@@ -26,10 +26,11 @@ from typing import *
 
 class SequenceDataset(torch.utils.data.Dataset):
     """Protein sequence dataset"""
-    def __init__(self, inputs: Dict[str, torch.Tensor], targets: torch.Tensor) -> torch.utils.data.Dataset:
+    def __init__(self, inputs: Dict[str, torch.Tensor], targets: torch.Tensor, isos: torch.BoolTensor) -> torch.utils.data.Dataset:
         super().__init__()
         self.inputs = inputs
         self.targets = targets
+        self.isos = isos
     
     def __len__(self):
         return len(self.targets) #train length...
@@ -40,7 +41,8 @@ class SequenceDataset(torch.utils.data.Dataset):
         attention_mask = self.inputs["attention_mask"][idx] #B, L
         input_reformats = {'input_ids': input_ids, 'token_type_ids': token_type_ids, 'attention_mask': attention_mask}
         target_reformats = {"labels": self.targets[idx]}
-        return input_reformats, target_reformats
+        isos_reformats = {"isos": self.isos[idx]}
+        return input_reformats, target_reformats, isos_reformats
     
 class NERSequenceDataset(torch.utils.data.Dataset):
     """Protein sequence dataset
