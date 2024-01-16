@@ -743,7 +743,27 @@ class ProtBertClassifierFinetune(L.LightningModule):
 #         len_test = int(0.1 * len_full)
         len_val = len_full - len_train #- len_test
         return len_train, len_val #, len_test  
-    
+
+    def _tokenize_and_split(self, proper_inputs: List[str], targets: np.ndarray, isos: torch.BoolTensor, split: bool=True):
+        proper_inputs = np.array(proper_inputs)[~isos.cpu().detach().numpy()] ##--> remove True isoform values to reserve for testing!
+        targets = targets[~isos.cpu().detach().numpy()] ##--> remove True isoform values to reserve for testing!
+        targets: torch.Tensor = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
+        
+        inputs = self.tokenizer.batch_encode_plus(proper_inputs,
+                                          add_special_tokens=True,
+                                          padding=True,
+                                          truncation=True, return_tensors="pt",
+                                          max_length=self.hparam.max_length) #Tokenize inputs as a dict type of Tensors
+
+        dataset = dl.SequenceDataset(inputs, targets)
+        
+        if split:
+            split0, split1 = torch.utils.data.random_split(dataset, ProtBertClassifierFinetune._get_split_sizes(self.hparam.train_frac, dataset),
+                                                                    generator=torch.Generator().manual_seed(0))
+            return split0, split1
+        else:
+            return dataset
+        
     def tokenizing(self, stage="train"):
         x = []
         isos = []
@@ -755,28 +775,17 @@ class ProtBertClassifierFinetune(L.LightningModule):
             x.append(' '.join([_ for _ in seq])) #AA Sequence
         proper_inputs = x #List[seq] of no. of elements (B,)
         isos: torch.BoolTensor = torch.BoolTensor(isos)
-
-        proper_inputs = np.array(proper_inputs)[~isos.cpu().detach().numpy()] ##--> remove True isoform values to reserve for testing!
         targets: np.ndarray = self.dataset.iloc[:,2:].values #list type including nans; (B,3)
-        targets = targets[~isos.cpu().detach().numpy()] ##--> remove True isoform values to reserve for testing!
-        targets: torch.Tensor = torch.from_numpy(targets).view(len(targets), -1).long() #target is originally list -> change to Tensor (B,1)
-        
-        inputs = self.tokenizer.batch_encode_plus(proper_inputs,
-                                          add_special_tokens=True,
-                                          padding=True,
-                                          truncation=True, return_tensors="pt",
-                                          max_length=self.hparam.max_length) #Tokenize inputs as a dict type of Tensors
 
-        dataset = dl.SequenceDataset(inputs, targets)
-        train, val = torch.utils.data.random_split(dataset, ProtBertClassifierFinetune._get_split_sizes(self.hparam.train_frac, dataset),
-                                                                generator=torch.Generator().manual_seed(0))
+        train, val = _tokenize_and_split(proper_inputs, targets, isos)
+        test = _tokenize_and_split(proper_inputs, targets, ~isos, split=False)
         
         if stage == "train":
             dataset = train
         elif stage == "val":
             dataset = val
         elif stage == "test":
-            dataset = val
+            dataset = test
             
         return dataset #torch Dataset
 
