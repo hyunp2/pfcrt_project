@@ -36,13 +36,15 @@ class DataParser(object):
                                                                "PPQ Resistance", "CQ Resistance", "Fitness"], drop_duplicate_on="Amino Acid Sequence", fill_na=None, dropna=True):
         if drop_duplicate_on == None:
             data = self.data.loc[:,col_names]
-            data = data.replace([{"PPQ Resistance": 2.0}, {"CQ Resistance": 2.0}], 1.0) #-> convert to binary
+            data = data.replace({"PPQ Resistance": 2.0}, 1.0) #-> convert to binary , 
+            data = data.replace({"CQ Resistance": 2.0}, 1.0)            
             data.fillna(value=fill_na, inplace=True)
             data.dropna(axis=0, inplace=dropna)
             return data
         elif drop_duplicate_on != None:
             data = self.data.loc[:,col_names].drop_duplicates(drop_duplicate_on)
-            data = data.replace([{"PPQ Resistance": 2.0}, {"CQ Resistance": 2.0}], 1.0) #-> convert to binary
+            data = data.replace({"PPQ Resistance": 2.0}, 1.0) #-> convert to binary , 
+            data = data.replace({"CQ Resistance": 2.0}, 1.0)
             data.fillna(value=fill_na, inplace=True) 
             data.dropna(axis=0, inplace=dropna)
             return data
