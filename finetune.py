@@ -108,8 +108,9 @@ class ProtBertClassifierFinetune(L.LightningModule):
         if self.hparam.loss == "contrastive": 
             self.make_hook()
 
-        self.wandb_run = wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
-        wandb.watch(self.head)
+        if self.hparam.log:
+            self.wandb_run = wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
+            wandb.watch(self.head)
 
     def __build_model_ner(self) -> None:
         """ Init BERT model + tokenizer + classification head.
@@ -133,9 +134,10 @@ class ProtBertClassifierFinetune(L.LightningModule):
         )
         if self.hparam.loss == "contrastive": 
             self.make_hook()
-
-        self.wandb_run = wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
-        wandb.watch(self.head)
+            
+        if self.hparam.log:
+            self.wandb_run = wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
+            wandb.watch(self.head)
 
     def __build_model_finetune(self) -> None:
         """ Init BERT model + tokenizer + classification head."""
@@ -187,9 +189,10 @@ class ProtBertClassifierFinetune(L.LightningModule):
         
         if self.hparam.loss == "contrastive": 
             self.make_hook()
-
-        self.wandb_run = wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
-        wandb.watch(self.head)
+            
+        if self.hparam.log:
+            self.wandb_run = wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
+            wandb.watch(self.head)
     
     def make_hook(self, ):
         self.fhook = dict()
@@ -424,7 +427,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         dataY = np.stack([y0_.detach().cpu().numpy().reshape(-1), y1_.detach().cpu().numpy().reshape(-1), y2_.detach().cpu().numpy().reshape(-1)]).T #data,3
 
         output = {"train_loss": loss_train, "train_acc0": train_acc0, "train_acc1": train_acc1, "train_acc2": train_acc2} #NEVER USE ORDEREDDICT!!!!
-        self.wandb_run.log(output)
+        if self.hparam.log: self.wandb_run.log(output)
 
         self.train_outputs["loss"].append(loss_train)
         self.train_outputs["predY"].append(predY)
@@ -453,7 +456,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         self.log("train_loss_mean", train_loss_mean, prog_bar=True)
 
         tqdm_dict = {"epoch_train_loss": train_loss_mean, "epoch_train_acc0": train_acc0, "epoch_train_acc1": train_acc1, "epoch_train_acc2": train_acc2}
-        self.wandb_run.log(tqdm_dict)
+        if self.hparam.log: self.wandb_run.log(tqdm_dict)
         
         self.metric_acc0.reset()   
         self.metric_acc1.reset()   
@@ -498,7 +501,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         
         output = {"val_loss": loss_val, "val_acc0": val_acc0, "val_acc1": val_acc1, "val_acc2": val_acc2} #NEVER USE ORDEREDDICT!!!!
         self.log("val_loss", loss_val, prog_bar=True)
-        self.wandb_run.log(output)
+        if self.hparam.log: self.wandb_run.log(output)
 
         self.val_outputs["val_loss"].append(loss_val)
         self.val_outputs["predY"].append(predY)
@@ -541,7 +544,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
 
             tqdm_dict = {"epoch_val_loss": val_loss_mean, "epoch_val_acc0": val_acc0, "epoch_val_acc1": val_acc1, "epoch_val_acc2": val_acc2}
 
-            self.wandb_run.log(tqdm_dict)
+            if self.hparam.log: self.wandb_run.log(tqdm_dict)
             self.metric_acc0.reset()   
             self.metric_acc1.reset()   
             self.metric_acc2.reset()   
@@ -583,7 +586,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         dataY = np.stack([y0_.detach().cpu().numpy().reshape(-1), y1_.detach().cpu().numpy().reshape(-1), y2_.detach().cpu().numpy().reshape(-1)]).T #data,3
 
         output = {"test_loss": loss_test, "test_acc0": test_acc0, "test_acc1": test_acc1, "test_acc2": test_acc2} #NEVER USE ORDEREDDICT!!!!
-        self.wandb_run.log(output)
+        if self.hparam.log: self.wandb_run.log(output)
 
         self.test_outputs["test_loss"].append(loss_test)
         self.test_outputs["predY"].append(predY)
@@ -611,15 +614,16 @@ class ProtBertClassifierFinetune(L.LightningModule):
         self.log("test_loss_mean", test_loss_mean, prog_bar=True)
         tqdm_dict = {"epoch_test_loss": test_loss_mean, "epoch_test_acc0": test_acc0, "epoch_test_acc1": test_acc1, "epoch_test_acc2": test_acc2}
         
-        self.wandb_run.log(tqdm_dict)
+        if self.hparam.log: self.wandb_run.log(tqdm_dict)
         self.metric_acc0.reset()   
         self.metric_acc1.reset()   
         self.metric_acc2.reset()   
-        
-        artifact = wandb.Artifact(name="finetune", type="torch_model")
-        path_and_name = os.path.join(self.hparam.load_model_directory, self.hparam.load_model_checkpoint)
-        artifact.add_file(str(path_and_name)) #which directory's file to add; when downloading it downloads directory/file
-        self.wandb_run.log_artifact(artifact)
+
+        if self.hparam.log: 
+            artifact = wandb.Artifact(name="finetune", type="torch_model")
+            path_and_name = os.path.join(self.hparam.load_model_directory, self.hparam.load_model_checkpoint)
+            artifact.add_file(str(path_and_name)) #which directory's file to add; when downloading it downloads directory/file
+            self.wandb_run.log_artifact(artifact)
 
     def on_predict_epoch_start(self, ) -> None:
         self.metric_acc0 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
@@ -686,7 +690,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         # self.log("pred_loss_mean", pred_loss_mean, prog_bar=True)
         tqdm_dict = {"epoch_pred_loss": pred_loss_mean, "epoch_pred_acc0": pred_acc0, "epoch_pred_acc1": pred_acc1, "epoch_pred_acc2": pred_acc2}
         
-        self.wandb_run.log(tqdm_dict)
+        if self.hparam.log: self.wandb_run.log(tqdm_dict)
         self.metric_acc0.reset()   
         self.metric_acc1.reset()   
         self.metric_acc2.reset()   
