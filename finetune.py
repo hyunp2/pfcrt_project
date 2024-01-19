@@ -827,5 +827,5 @@ if __name__ == "__main__":
     # ------------------------
     # 1 INIT LIGHTNING MODEL
     # ------------------------
-    model = Model.ProtBertClassifier(hparams) if not hparams.finetune else FModel.ProtBertClassifierFinetune.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams, strict=False )
+    model = FModel.ProtBertClassifierFinetune.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams, strict=False )
     print(model.train_dataloader())
