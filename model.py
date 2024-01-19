@@ -87,9 +87,10 @@ class ProtBertClassifier(L.LightningModule):
         )
         if self.hparam.loss == "contrastive": 
             self.make_hook()
-
-        wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
-        wandb.watch(self.head)
+            
+        if self.hparam.log:
+            wandb.init(project="DL_Sequence_Collab", entity="hyunp2", group="DDP_runs")
+            wandb.watch(self.head)
 
     def __build_model_ner(self) -> None:
         """ Init BERT model + tokenizer + classification head.
@@ -113,9 +114,10 @@ class ProtBertClassifier(L.LightningModule):
         )
         if self.hparam.loss == "contrastive": 
             self.make_hook()
-
-        wandb.init(project="DL_Sequence_Collab_Matt", entity="hyunp2")
-        wandb.watch(self.head)
+            
+        if self.hparam.log:
+            wandb.init(project="DL_Sequence_Collab_Matt", entity="hyunp2")
+            wandb.watch(self.head)
    
     def make_hook(self, ):
         self.fhook = dict()
@@ -332,7 +334,7 @@ class ProtBertClassifier(L.LightningModule):
         train_acc = self.metric_acc(labels_hat.detach().cpu().view(-1,), y.detach().cpu().view(-1,)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 
         output = {"train_loss": loss_train, "train_acc": train_acc} #NEVER USE ORDEREDDICT!!!!
-        wandb.log(output)
+        if self.hparam.log: wandb.log(output)
         self.log("train_loss", loss_train, prog_bar=True)
         self.log("train_acc", train_acc, prog_bar=True)
                 
@@ -361,7 +363,7 @@ class ProtBertClassifier(L.LightningModule):
 
 #         tqdm_dict = {"epoch_train_loss": train_loss_mean, "epoch_train_acc": train_acc_mean}
         tqdm_dict = {"epoch_train_loss": train_loss_mean}
-        wandb.log(tqdm_dict)
+        if self.hparam.log: wandb.log(tqdm_dict)
         self.metric_acc.reset()    
 
     def on_validation_epoch_start(self, ) -> None:
@@ -386,7 +388,7 @@ class ProtBertClassifier(L.LightningModule):
         val_acc = self.metric_acc(labels_hat.detach().cpu().view(-1), y.detach().cpu().view(-1)) #Must mount tensors to CPU;;;; ALSO, val_acc should be returned!
 
         output = {"val_loss": loss_val, "val_acc": val_acc} #NEVER USE ORDEREDDICT!!!!
-        wandb.log(output)
+        if self.hparam.log: wandb.log(output)
         self.log("val_loss", loss_val, prog_bar=True)
 
         self.val_outputs["val_loss"].append(loss_val)
@@ -413,7 +415,7 @@ class ProtBertClassifier(L.LightningModule):
 #             tqdm_dict = {"epoch_val_loss": val_loss_mean, "epoch_val_acc": val_acc_mean}
             tqdm_dict = {"epoch_val_loss": val_loss_mean}
 
-            wandb.log(tqdm_dict)
+            if self.hparam.log: wandb.log(tqdm_dict)
             self.metric_acc.reset()   
 
     def on_test_epoch_start(self, ) -> None:
@@ -436,7 +438,7 @@ class ProtBertClassifier(L.LightningModule):
         test_acc = self.metric_acc(labels_hat.detach().cpu().view(-1,), y.detach().cpu().view(-1)) #Must mount tensors to CPU
         
         output = {"test_loss": loss_test, "test_acc": test_acc}
-        wandb.log(output)
+        if self.hparam.log: wandb.log(output)
         self.log("test_acc", test_acc, prog_bar=True)
 
         self.test_outputs["test_loss"].append(loss_test)
@@ -456,7 +458,7 @@ class ProtBertClassifier(L.LightningModule):
 #         tqdm_dict = {"epoch_test_loss": test_loss_mean, "epoch_test_acc": test_acc_mean}
         tqdm_dict = {"epoch_test_loss": test_loss_mean}
 
-        wandb.log(tqdm_dict)
+        if self.hparam.log: wandb.log(tqdm_dict)
         self.metric_acc.reset()   
 
     def on_predict_epoch_start(self, ):
