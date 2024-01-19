@@ -81,6 +81,7 @@ def get_args():
     parser.add_argument('--use_ce', action="store_true", help='CE vs Focal loss')
     parser.add_argument('--basis', type=int, default=0, choices=[0,1,2], help='Which target to use')
     parser.add_argument('--aug', action="store_true", help='Use data augmentation')
+    parser.add_argument('--log', action="store_true", help='To log into W&B or not')
 
     args = parser.parse_args()
     return args
