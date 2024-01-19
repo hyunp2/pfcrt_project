@@ -746,7 +746,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
 
     def _tokenize_and_split(self, proper_inputs: List[str], targets: np.ndarray, isos: torch.BoolTensor, split: bool=True):
         print(np.array(proper_inputs).shape)
-        print(~isos.cpu().detach().numpy().shape)
+        print(isos.cpu().detach().numpy().shape)
         
         proper_inputs = np.array(proper_inputs)[~isos.cpu().detach().numpy()] ##--> remove True isoform values to reserve for testing!
 
