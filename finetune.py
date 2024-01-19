@@ -819,4 +819,13 @@ class ProtBertClassifierFinetune(L.LightningModule):
         )
 
 if __name__ == "__main__":
-    
+    from main import get_args
+    hparams = get_args()
+
+    L.seed_everything(hparams.seed)
+
+    # ------------------------
+    # 1 INIT LIGHTNING MODEL
+    # ------------------------
+    model = Model.ProtBertClassifier(hparams) if not hparams.finetune else FModel.ProtBertClassifierFinetune.load_from_checkpoint( os.path.join(hparams.load_model_directory, hparams.load_model_checkpoint), hparam=hparams, strict=False )
+    print(model.train_dataloader())
