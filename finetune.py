@@ -789,7 +789,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         train, val = self._tokenize_and_split(proper_inputs, targets, isos)
         test = self._tokenize_and_split(proper_inputs, targets, ~isos, split=False)
 
-        print(len(proper_inputs))
+        print(len(proper_inputs), proper_inputs[slice(-8,None)])
         print(len(isos))
         print(len(targets))
         print(len(train) + len(val) + len(test))
