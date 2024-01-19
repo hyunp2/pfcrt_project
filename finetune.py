@@ -749,8 +749,8 @@ class ProtBertClassifierFinetune(L.LightningModule):
         return len_train, len_val #, len_test  
 
     def _tokenize_and_split(self, proper_inputs: List[str], targets: np.ndarray, isos: torch.BoolTensor, split: bool=True):
-        print(np.array(proper_inputs))
-        print(isos.cpu().detach().numpy())
+        # print(np.array(proper_inputs))
+        # print(isos.cpu().detach().numpy())
         
         proper_inputs = np.array(proper_inputs)[~isos.cpu().detach().numpy()] ##--> remove True isoform values to reserve for testing!
 
@@ -788,6 +788,11 @@ class ProtBertClassifierFinetune(L.LightningModule):
 
         train, val = self._tokenize_and_split(proper_inputs, targets, isos)
         test = self._tokenize_and_split(proper_inputs, targets, ~isos, split=False)
+
+        print(len(proper_inputs))
+        print(len(isos))
+        print(len(targets))
+        print(len(train) + len(val) + len(test))
         
         if stage == "train":
             dataset = train
