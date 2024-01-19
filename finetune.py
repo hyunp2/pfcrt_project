@@ -817,3 +817,6 @@ class ProtBertClassifierFinetune(L.LightningModule):
             batch_size=self.hparam.batch_size,
             num_workers=self.hparam.num_workers,
         )
+
+if __name__ == "__main__":
+    
