@@ -770,10 +770,10 @@ class ProtBertClassifierFinetune(L.LightningModule):
         
     def tokenizing(self, stage="train"):
         x = []
-        isos = []
+        isos = [False] * len(self.dataset)
         for i in range(len(self.dataset)):
             isoform = "F145I" in str(self.dataset.iloc[i,0]) #WIP! don't explicitly set this!
-            if isoform: isos.append(i)                
+            if isoform: isos[i] = True
             seq = str(self.dataset.iloc[i,1])
             # seq = seq.split("")
             x.append(' '.join([_ for _ in seq])) #AA Sequence
