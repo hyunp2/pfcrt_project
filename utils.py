@@ -68,7 +68,7 @@ class ModelAnalyzer(object):
                 break
         assert int(self.hparam.load_model_directory[-1]) == c, "directory last digit must match loss_weights non-zero index"
         
-        trainer.predict(self.model, [self.dmo_train, self.dmo_test]) #Get loss and acc
+        trainer.predict(self.model, [self.dmo_test]) #Get loss and acc
         #[Jan 9th 2024] git pull && python -m utils --ngpus 1 --accelerator gpu --strategy auto -b 512 --finetune --loss_weights 0 1 0 --load_model_directory output_finetune_l1 --load_model_checkpoint best_pretrained.ckpt
 
     def get_highlights(self, attribute="saliency", normed=False, inputs: torch.Tensor =None, tgt_idx: int = 0, additional_forward_args = None):
