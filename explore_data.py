@@ -28,7 +28,7 @@ class DataParser(object):
         ext = os.path.splitext(filename)[-1]
         if ext in [".xlsx"]:
             data = pd.read_excel(f"{filename}", header=2)
-            data = data.iloc[:-11,:]
+            data = data.iloc[:-12,:]
         elif ext in [".csv"]:
             data = pd.read_csv(f"{filename}")        
         return data
