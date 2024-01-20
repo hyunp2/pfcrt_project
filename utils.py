@@ -205,5 +205,5 @@ if __name__ == "__main__":
 # export WANDB_DIR=/Scr/hyunpark/DL_Sequence_Collab/pfcrt_project
 # export WANDB_CACHE_DIR=/Scr/hyunpark/DL_Sequence_Collab/pfcrt_project
 # export TRANSFORMERS_CACHE=/Scr/hyunpark/DL_Sequence_Collab/pfcrt_project
-# git pull && python -m utils --ngpus 1 --accelerator gpu --strategy auto -b 512 --finetune --loss_weights 0 1 0 --load_model_directory output_finetune_l1 --load_model_checkpoint best_pretrained.ckpt
+# git pull && python -m utils --ngpus 1 --accelerator gpu --strategy auto -b 512 --finetune --loss_weights 0 1 0 --load_model_directory output_finetune_l1 --load_model_checkpoint best_finetune.ckpt
 
