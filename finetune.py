@@ -62,7 +62,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
         ###FINETUNE OPTIONS 1 (loss weight, dataset)
         self.ce_loss_weight_initialized = False
         parser = DataParser.get_data("pfcrt.xlsx")
-        data_trunc = parser.select_columns(fill_na=self.hparam.fillna_val)
+        data_trunc = parser.select_columns(fill_na=self.hparam.fillna_val, debias=self.hparam.debias)
         self.dataset = data_trunc
         self.num_labels = 2 #for loading pretrained weights
 
