@@ -85,7 +85,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
             # Loss criterion initialization.
             _ = self.__build_loss_finetune() if not self.ner else self.__build_model_ner()
             
-            # self.freeze_encoder()
+            # self.freeze_encoder() ##Comment out on (Jan 20th 2024)
         self.num_labels = 10 #arbitrarily large number 
 
     def __build_model(self) -> None:
