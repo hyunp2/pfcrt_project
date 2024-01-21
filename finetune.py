@@ -387,7 +387,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
             loss0_fn, loss1_fn, loss2_fn = self.loss0, self.loss1, self.loss2
             assert len(self.hparam.loss_weights) == 3, "exactly three values should be provided for loss weights!"
             w0, w1, w2 = self.hparam.loss_weights
-            losses = w0 * loss0_fn(predictions["logits0"], targets["labels"][:,0].long()) + w1 * loss1_fn(predictions["logits1"], targets["labels"][:,1].long()) + w2 * loss2_fn(predictions["logits2"], targets["labels"][:,2].long())
+            losses = w0 * loss0_fn(predictions["logits0"], targets["labels"][:,0].long() if not self.hparam.use_ce else targets["labels"][:,0].float32()) + w1 * loss1_fn(predictions["logits1"], targets["labels"][:,1].long() if not self.hparam.use_ce else targets["labels"][:,1].float32()) + w2 * loss2_fn(predictions["logits2"], targets["labels"][:,2].long() if not self.hparam.use_ce else targets["labels"][:,2].float32())
             return losses.mean()
     
     def on_train_epoch_start(self, ) -> None:
