@@ -213,9 +213,9 @@ class ProtBertClassifierFinetune(L.LightningModule):
             self.weight1 = (1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
             self.weight2 = (1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
         else:
-            self.weight0 = targets.new_ones(3 if not self.hparam.debias else 2)
-            self.weight1 = targets.new_ones(3 if not self.hparam.debias else 2)
-            self.weight2 = targets.new_ones(2)
+            self.weight0 = targets.new_ones(3 if not self.hparam.debias else 2).to(torch.float32)
+            self.weight1 = targets.new_ones(3 if not self.hparam.debias else 2).to(torch.float32)
+            self.weight2 = targets.new_ones(2).to(torch.float32)
             
         self.ce_loss_weight_initialized = True
     
