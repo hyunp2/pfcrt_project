@@ -164,7 +164,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
             nn.ReLU(inplace=True),
             nn.Linear(self.encoder_features, self.encoder_features),
             nn.ReLU(inplace=True),
-            nn.Linear(self.encoder_features, 3),
+            nn.Linear(self.encoder_features, 3 if not self.hparam.debias else 2),
         )
         
         self.classifier1 = nn.Sequential(
@@ -174,7 +174,7 @@ class ProtBertClassifierFinetune(L.LightningModule):
             nn.ReLU(inplace=True),
             nn.Linear(self.encoder_features, self.encoder_features),
             nn.ReLU(inplace=True),
-            nn.Linear(self.encoder_features, 3),
+            nn.Linear(self.encoder_features, 3 if not self.hparam.debias else 2),
         )
         
         self.classifier2 = nn.Sequential(
@@ -213,8 +213,8 @@ class ProtBertClassifierFinetune(L.LightningModule):
             self.weight1 = (1 / (torch.nn.functional.one_hot(valid_targets1).sum(dim=0) / valid_targets1.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
             self.weight2 = (1 / (torch.nn.functional.one_hot(valid_targets2).sum(dim=0) / valid_targets2.size(0) + torch.finfo(torch.float32).eps)).to(self.device)
         else:
-            self.weight0 = targets.new_ones(3)
-            self.weight1 = targets.new_ones(3)
+            self.weight0 = targets.new_ones(3 if not self.hparam.debias else 2)
+            self.weight1 = targets.new_ones(3 if not self.hparam.debias else 2)
             self.weight2 = targets.new_ones(2)
             
         self.ce_loss_weight_initialized = True
@@ -391,8 +391,8 @@ class ProtBertClassifierFinetune(L.LightningModule):
             return losses.mean()
     
     def on_train_epoch_start(self, ) -> None:
-        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass", num_classes=3 if not self.hparam.debias else 2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass", num_classes=3 if not self.hparam.debias else 2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.metric_acc2 = torchmetrics.Accuracy(task="multiclass", num_classes=2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.train_outputs = collections.defaultdict(list)
 
@@ -463,8 +463,8 @@ class ProtBertClassifierFinetune(L.LightningModule):
         self.metric_acc2.reset()   
         
     def on_validation_epoch_start(self, ) -> None:
-        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass", num_classes=3 if not self.hparam.debias else 2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass", num_classes=3 if not self.hparam.debias else 2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.metric_acc2 = torchmetrics.Accuracy(task="multiclass", num_classes=2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.val_outputs = collections.defaultdict(list)
 
@@ -550,8 +550,8 @@ class ProtBertClassifierFinetune(L.LightningModule):
             self.metric_acc2.reset()   
 
     def on_test_epoch_start(self, ) -> None:
-        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass", num_classes=3 if not self.hparam.debias else 2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass", num_classes=3 if not self.hparam.debias else 2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.metric_acc2 = torchmetrics.Accuracy(task="multiclass", num_classes=2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.test_outputs = collections.defaultdict(list)
 
@@ -626,8 +626,8 @@ class ProtBertClassifierFinetune(L.LightningModule):
             self.wandb_run.log_artifact(artifact)
 
     def on_predict_epoch_start(self, ) -> None:
-        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
-        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass", num_classes=3) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc0 = torchmetrics.Accuracy(task="multiclass", num_classes=3 if not self.hparam.debias else 2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
+        self.metric_acc1 = torchmetrics.Accuracy(task="multiclass", num_classes=3 if not self.hparam.debias else 2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.metric_acc2 = torchmetrics.Accuracy(task="multiclass", num_classes=2) if self.num_labels > 2 else torchmetrics.Accuracy(task="binary")
         self.predict_outputs = collections.defaultdict(list)
 
@@ -717,8 +717,8 @@ class ProtBertClassifierFinetune(L.LightningModule):
         [update_these_opt.append(optimizer_list[idx]) for idx in loss_weights_indices]
         
         parameters = [
-            # {"params": self.model.parameters(), "lr": self.hparam.learning_rate * 0.01},
-            {"params": self.head.parameters(), "lr": self.hparam.learning_rate * 0.1},
+            {"params": self.model.parameters(), "lr": self.hparam.learning_rate * 0.001},
+            {"params": self.head[0].parameters(), "lr": self.hparam.learning_rate * 0.1},
             *update_these_opt
         ] #Explicitly set which to optimize!
         
